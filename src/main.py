@@ -14,6 +14,7 @@ MODULES = ["modules/commands", "modules/events"]
 if __name__ == "__main__":
     utils.setup_logging(level=logging.INFO)
 
+    ## loop through all the files under the commands folder, that's how we check for commands
     for directory in MODULES:
         files = [
             name
