@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "tamasfe.even-better-toml",
+        "streetsidesoftware.code-spell-checker",
+        "ms-python.black-formatter",
+        "njpwerner.autodocstring"
+    ]
+}

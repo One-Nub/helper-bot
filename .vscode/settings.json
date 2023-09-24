@@ -1,0 +1,40 @@
+{
+    "cSpell.words": [
+        "agelimit",
+        "aiohttp",
+        "asgi",
+        "blacksheep",
+        "hikari",
+        "proxied",
+        "requote",
+        "roblox",
+        "Roblox",
+        "roleset",
+        "rolesets",
+        "uvicorn",
+        "webserver"
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/__pycache__": true,
+    },
+    "python.analysis.typeCheckingMode": "off",
+    "pylint.importStrategy": "fromEnvironment",
+    "pylint.args": [
+        "--max-line-length=110",
+        "--disable=C0413,C0103,C0114,C0301"
+    ],
+    "black-formatter.importStrategy": "fromEnvironment",
+    "black-formatter.args": [
+        "-l",
+        "110"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
+}
