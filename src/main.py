@@ -9,7 +9,7 @@ from helper_bot import HelperBot
 intents = Intents(guilds=True, message_content=True, guild_messages=True, emojis=True)
 bot = HelperBot(command_prefix=".", intents=intents)
 
-MODULES = ["modules/commands", "modules/events"]
+MODULES = ["modules/commands", "modules/events", "modules/premium_support"]
 
 if __name__ == "__main__":
     utils.setup_logging(level=logging.INFO)
