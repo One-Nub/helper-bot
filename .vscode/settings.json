@@ -4,6 +4,7 @@
         "aiohttp",
         "asgi",
         "blacksheep",
+        "BLURPLE",
         "hikari",
         "proxied",
         "requote",
