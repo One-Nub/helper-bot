@@ -27,7 +27,7 @@
     "pylint.importStrategy": "fromEnvironment",
     "pylint.args": [
         "--max-line-length=110",
-        "--disable=C0413,C0103,C0114,C0301"
+        "--disable=C0413,C0103,C0114,C0301,W0603,W1203"
     ],
     "black-formatter.importStrategy": "fromEnvironment",
     "black-formatter.args": [
