@@ -1,11 +1,13 @@
-from discord.ext.commands import Context
-import discord
-
-from helper_bot import instance as bot
-
 import asyncio
+import math
 from datetime import datetime, timedelta
 
+import discord
+from discord import ui
+from discord.ext.commands import Context
+
+from constants import UNICODE_LEFT, UNICODE_RIGHT
+from helper_bot import instance as bot
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
@@ -23,133 +25,137 @@ async def delete_tag(ctx: Context):
     await ctx.reply("attempted to remove a tag")
 
 
-
 ## tags command
+
+MAX_PER_PAGE = 20
+
 
 @tag.command("all", description="View all the tags in the tag list.")
 async def view_tag(ctx: Context):
-    try:
+    # Get tags from the db, get their names, then sort alphabetically
+    tag_list = await bot.db.get_all_tags()
+    tag_names = [tag["_id"] for tag in tag_list]
+    tag_names.sort(reverse=False)
 
-        # get the tag data
-        taglist = await bot.db.get_all_tags()
-        tagnames = []
+    # Determine max # of pages
+    max_pages = math.ceil(len(tag_names) / MAX_PER_PAGE)
 
-        # get all the tag names
-        for key in range(0, len(taglist)):
-            tagnames.append(taglist[key]['_id'])
-        
-        # sort the tag names
-        tagnames.sort(reverse = False)
+    # Build generic buttons into a view
+    view = ui.View(timeout=None)
 
+    left_button = ui.Button(
+        style=discord.ButtonStyle.secondary,
+        label=UNICODE_LEFT,
+        disabled=True,
+        custom_id=f"tag_all:{ctx.author.id}:0:{max_pages}",
+    )
 
-        # pages stuff
-        count = 20
-        pages = 1
-        while len(taglist) > count:
-            count += 20
-            pages += 1
-    
-        # each page has a different set of users
-        cur_page = 1
-        mainlist = []
+    right_button = ui.Button(
+        style=discord.ButtonStyle.secondary,
+        label=UNICODE_RIGHT,
+        disabled=True if max_pages == 1 else False,
+        custom_id=f"tag_all:{ctx.author.id}:1:{max_pages}",
+    )
 
-        for current_page in range(0, pages):
-            x = current_page * 20
-            y = x + 20
-            mainlist.append(tagnames[x:y])
+    view.add_item(left_button)
+    view.add_item(right_button)
 
-
-    
-        # build the embed ---------------------
-        async def build_embed(cur_page):
-            embed_tags = discord.Embed(
-                title = "All Tags",
-                description = "----------",
-                color = 0x7289da,
-                )
-    
-            # set some variables
-            currentlist = mainlist[cur_page - 1]
-            mystr = ""
+    # Get the embed & send.
+    embed = await build_page(ctx.author.display_avatar, tag_names, 0)
+    await ctx.reply(embed=embed, view=view)
 
 
-            # build the embed
-            for key in currentlist:
-                index = currentlist.index(key) + 1
+@bot.register_button_handler("tag_all")
+async def view_tag_buttons(interaction: discord.Interaction):
+    custom_id = interaction.data["custom_id"]
+    custom_data = custom_id.split(":")
+
+    # Remove tag_all text
+    custom_data.pop(0)
+
+    # Get all other useful info from the custom id
+    author_id = custom_data[0]
+    new_page = int(custom_data[1])
+    max_pages = int(custom_data[2])
+
+    # Only listen to the author of the command
+    if str(author_id) != str(interaction.user.id):
+        await interaction.response.send_message("You can't flip pages on this embed!", ephemeral=True)
+        return
+
+    # Get the timezone so python doesn't complain
+    tz = interaction.message.created_at.tzinfo
+
+    # If it's been over 3 minutes since the prompt was activated.
+    if datetime.now(tz) - timedelta(minutes=3) > interaction.message.created_at:
+        # Get rid of the buttons
+        view = ui.View(timeout=None)
+        await interaction.response.edit_message(embeds=interaction.message.embeds, view=view)
+        return
+
+    # Build the buttons again
+    view = ui.View(timeout=180)
+
+    # Recalculate the next and prev page indexes
+    prev_page = 0 if new_page - 1 < 0 else new_page - 1
+    next_page = max_pages if new_page + 1 >= max_pages else new_page + 1
+
+    left_button = ui.Button(
+        style=discord.ButtonStyle.secondary,
+        label=UNICODE_LEFT,
+        disabled=True if prev_page <= 0 and new_page != 1 else False,
+        custom_id=f"tag_all:{author_id}:{prev_page}:{max_pages}",
+    )
+
+    right_button = ui.Button(
+        style=discord.ButtonStyle.secondary,
+        label=UNICODE_RIGHT,
+        disabled=True if next_page == max_pages else False,
+        custom_id=f"tag_all:{author_id}:{next_page}:{max_pages}",
+    )
+
+    view.add_item(left_button)
+    view.add_item(right_button)
+
+    # Get tags from the db, get their names, then sort alphabetically
+    tag_list = await bot.db.get_all_tags()
+    tag_names = [tag["_id"] for tag in tag_list]
+    tag_names.sort(reverse=False)
+
+    new_page = await build_page(interaction.user.display_avatar.url, tag_names, new_page)
+    await interaction.response.edit_message(embed=new_page, view=view)
 
 
-                # building the lines in an embed
-                mystr += key + "\n"
+async def build_page(avatar_url: str, items: list[str], page_num: int = 0):
+    max_pages = math.ceil(len(items) / MAX_PER_PAGE)
 
-                if index == 10 or index == 20:
-                    embed_tags.add_field(name = "", value = mystr, inline = True)
-                    mystr = key + "\n"
-                    mystr = ""
+    # Grab the 20 elements that we care about
+    offset = page_num * MAX_PER_PAGE
+    tag_names = items[offset : offset + MAX_PER_PAGE]
 
-            # make sure the embeds send even if we didn't hit 5 or 10 users
-            if len(currentlist) < 10:
-                embed_tags.add_field(name = " ", value = mystr, inline = True)
-            if len(currentlist) > 10 and len(currentlist) < 20:
-                embed_tags.add_field(name = " ", value = mystr, inline = True)
+    # Build the embed.
+    embed_tags = discord.Embed(
+        title="All Tags",
+        description="----------",
+        color=0x7289DA,
+    )
 
+    # Tags will be added to either of these
+    field_one = []
+    field_two = []
 
-            # footer
-            embed_tags.set_footer(text = f"Page {cur_page}/{pages}", icon_url = ctx.author.display_avatar)
-            # return the entire embed
-            return embed_tags
-
-
-
-        ## get the user for reactions
-        if ctx.bot.get_user(ctx.author.id) == None:
-            user = await ctx.bot.fetch_user(ctx.author.id)
+    for index, tag in enumerate(tag_names):
+        if index < 10:
+            field_one.append(tag)
         else:
-            user = ctx.bot.get_user(ctx.author.id)
+            field_two.append(tag)
 
+    # Convert the lists above to strings
+    embed_tags.add_field(name="", value="\n".join(field_one), inline=True)
+    embed_tags.add_field(name="", value="\n".join(field_two), inline=True)
 
+    # footer
+    embed_tags.set_footer(text=f"Page {page_num + 1}/{max_pages}", icon_url=avatar_url)
 
-
-
-        ## send the reactions part, nub pls fix this for buttons ------
-        send_embed = await ctx.send(embed = await build_embed(cur_page))
-        if pages != 1:
-            await send_embed.add_reaction("◀️")
-            await send_embed.add_reaction("🗑️")
-            await send_embed.add_reaction("▶️")
-
-            ## checks if the author is the only one reacting
-            def check(reaction, user):
-                return user == ctx.author and str(reaction.emoji) in ["◀️", "🗑️", "▶️"]
-
-    
-
-            ## this is the reactions part, nub replace this with buttons ty --------
-            while True:
-                try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=120, check = check)
-                    # waiting for a reaction to be added - times out after 120 seconds
-                    if str(reaction.emoji) == "▶️" and cur_page != pages:
-                        cur_page += 1
-                        await send_embed.edit(embed = (await build_embed(cur_page)))
-                        await send_embed.remove_reaction(reaction, user)
-
-                    elif str(reaction.emoji) == "◀️" and cur_page > 1:
-                        cur_page -= 1
-                        await send_embed.edit(embed = (await build_embed(cur_page)))
-                        await send_embed.remove_reaction(reaction, user)
-
-                    elif str(reaction.emoji) == "🗑️" :
-                        await send_embed.remove_reaction(reaction, user)
-                        raise asyncio.TimeoutError
-                
-                    else:
-                        await send_embed.remove_reaction(reaction, user)
-                        # removes reactions if the user tries to go forward on the last page or backwards on the first page
-                except asyncio.TimeoutError:
-                    await send_embed.clear_reactions()
-                    break
-                    # ending the loop if user doesn't react after x seconds
-
-    # exception handling
-    except Exception as Error:
-        await ctx.send(Error)
+    # return the entire embed
+    return embed_tags
