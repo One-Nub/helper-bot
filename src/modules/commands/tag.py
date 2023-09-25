@@ -35,15 +35,18 @@ async def tag(ctx: Context, name: str = "0"):
 
 
 @tag.command("add", description="Add a tag to the tag list.")
-async def add_tag(ctx: Context, content: str = "0"):
+async def add_tag(ctx: Context, tag_name: str = "", tag_content: str=""):
     try:
         ## if name or content is empty, raise error
-        if content == "0":
-            raise Exception("You forgot the tag name!")
-        
-
-        await ctx.send(content)
-        
+        if tag_name == "" or tag_content == "":
+            raise Exception("Please provide both tag name and tag content.")
+        else:
+             tag_list = await bot.db.get_all_tags()
+             tag_names = [tag["_id"] for tag in tag_list]
+             if(tag_name in tag_names):
+                 raise Exception("Tag already exists.")
+             await bot.db.update_tag(tag_name, tag_content)
+             await ctx.send(f"Tag `{tag_name}` has been added.")
         ## add the tag to db
     
     ## send the errorm essage
