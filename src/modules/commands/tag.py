@@ -12,28 +12,26 @@ from helper_bot import instance as bot
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
 async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
-    tag_list = await bot.db.get_all_tags()
-    check = False
+    ## assign the tag to a variable
+    tag = await bot.db.get_tag(name)
 
     try:
         ## if name is empty, raise error
         if name == "0":
             raise Exception("You forgot the tag name!")
-        
-        ## extract the tag data
-        for tag in tag_list:
-            if tag['_id'] == name:
-                await ctx.message.delete()
-                ## send the tag content + optional message
-                msg = await ctx.send(tag['content'])
-                if(message != "0"):
-                    await msg.edit(content=f"{message} {tag['content']}")
-                check = True
-                break
 
-        ## if no tag was found, raise error
-        if check == False:
+        ## check if the tag exists
+        if tag != None:
+            await ctx.message.delete()
+            ## send the tag content + optional message
+            msg = await ctx.send(tag['content'])
+            if(message != "0"):
+                await msg.edit(content=f"{message} {tag['content']}")
+
+        ## if no tag found, raise error
+        else:
             raise Exception("Tag was not found.")
+
 
     ## send the errorm essage
     except Exception as Error:
@@ -66,25 +64,19 @@ async def add_tag(ctx: Context, tag_name: str, *, tag_content: str):
 @tag.command("delete", description="Remove a tag from the tag list.")
 async def delete_tag(ctx: Context, name: str = "0"):
     try:
-        tag_list = await bot.db.get_all_tags()
-        check = False
-
         ## if name is empty, raise error
         if name == "0":
             raise Exception("You forgot the tag name!")
         
-        ## extract the tag data
-        for tag in tag_list:
-            if tag['_id'] == name:
-                await bot.db.delete_tag(name)
-                await ctx.send(name + "tag has been deleted.")
-                check = True
-                break
-        
-        if check == False:
+        ## delete the tag
+        if await bot.db.get_tag(name) != None:
+            await bot.db.delete_tag(name)
+            await ctx.send("Tag has been deleted.")
+        ## if no tag found, raise error
+        else:
             raise Exception("Tag was not found.")
 
-    ## send the errorm essage
+    ## send the error message
     except Exception as Error:
         await ctx.send(Error)
 
