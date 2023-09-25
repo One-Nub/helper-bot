@@ -46,6 +46,8 @@ async def add_tag(ctx: Context, tag_name: str, *, tag_content: str):
         ## if name or content is empty, raise error
         if tag_name == "" or tag_content == "":
             raise Exception("Please provide both tag name and tag content.")
+        elif tag_content.__len__() > 2000:
+            raise Exception("Tag content exceeds maximum length.")
         else:
              tag_list = await bot.db.get_all_tags()
              tag_names = [tag["_id"] for tag in tag_list]
