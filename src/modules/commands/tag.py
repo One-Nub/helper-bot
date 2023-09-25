@@ -39,17 +39,16 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
 
 
 @tag.command("add", description="Add a tag to the tag list.")
-async def add_tag(ctx: Context, tag_name: str, *, tag_content: str):
+async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
         ## if name or content is empty, raise error
-        if tag_name == "" or tag_content == "":
+        if tag_name == "⅋" or tag_content == "⅋":
             raise Exception("Please provide both tag name and tag content.")
-        elif tag_content.__len__() > 2000:
+        if  tag_content.__len__() > 2000:
             raise Exception("Tag content exceeds maximum length.")
         else:
-             tag_list = await bot.db.get_all_tags()
-             tag_names = [tag["_id"] for tag in tag_list]
-             if(tag_name in tag_names):
+             check_tag = await bot.db.get_tag(tag_name)
+             if(check_tag != None):
                  raise Exception("Tag already exists.")
              await bot.db.update_tag(tag_name, tag_content,aliases=None,author=ctx.author.id, use_count=0, created_at=datetime.now(), updated_at=datetime.now())
              await ctx.send(f"Tag `{tag_name}` has been added.")
