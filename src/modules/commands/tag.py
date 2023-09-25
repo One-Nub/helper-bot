@@ -27,7 +27,7 @@ async def tag(ctx: Context, name: str = "0", message: str = "0"):
                 if message != "0":
                     await ctx.send(message)
                 await ctx.send(tag['content'])
-                
+
                 check = True
                 break
 
@@ -59,8 +59,29 @@ async def add_tag(ctx: Context, content: str = "0"):
 
 
 @tag.command("delete", description="Remove a tag from the tag list.")
-async def delete_tag(ctx: Context):
-    await ctx.reply("attempted to remove a tag")
+async def delete_tag(ctx: Context, name: str = "0"):
+    try:
+        tag_list = await bot.db.get_all_tags()
+        check = False
+
+        ## if name is empty, raise error
+        if name == "0":
+            raise Exception("You forgot the tag name!")
+        
+        ## extract the tag data
+        for tag in tag_list:
+            if tag['_id'] == name:
+                await bot.db.delete_tag(name)
+                await ctx.send(name + "tag has been deleted.")
+                check = True
+                break
+        
+        if check == False:
+            raise Exception("Tag was not found.")
+
+    ## send the errorm essage
+    except Exception as Error:
+        await ctx.send(Error)
 
 
 ## tags command
