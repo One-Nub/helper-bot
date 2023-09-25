@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Literal, Optional, Type
 
+import certifi
 import discord
 from discord.app_commands import CommandTree
 from discord.ext import commands
@@ -101,7 +102,7 @@ class MongoDB:
             connection_string (str): The URL to connect to MongoDB with.
         """
         logging.info("Connecting to MongoDB.")
-        self.client = motor_asyncio.AsyncIOMotorClient(connection_string)
+        self.client = motor_asyncio.AsyncIOMotorClient(connection_string, tlsCAFile=certifi.where())
         self.db = self.client["bloxlink_helper"]
         logging.info("MongoDB initialized.")
 
