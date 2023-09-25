@@ -49,9 +49,8 @@ async def add_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â…
         if  tag_content.__len__() > 2000:
             raise Exception("Tag content exceeds maximum length.")
         else:
-             tag_list = await bot.db.get_all_tags()
-             tag_names = [tag["_id"] for tag in tag_list]
-             if(tag_name in tag_names):
+             check_tag = await bot.db.get_tag(tag_name)
+             if(check_tag != None):
                  raise Exception("Tag already exists.")
              await bot.db.update_tag(tag_name, tag_content,aliases=None,author=ctx.author.id, use_count=0, created_at=datetime.now(), updated_at=datetime.now())
              await ctx.send(f"Tag `{tag_name}` has been added.")
