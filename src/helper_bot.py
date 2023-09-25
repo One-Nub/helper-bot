@@ -193,3 +193,31 @@ class MongoDB:
             ],
         }
         await self.db["tags"].delete_one(query)
+
+    async def set_log_channel(self, guild_id: str, premium_support: str = None, tag_updates: str = None):
+        """Set the log channel(s) in a guild
+
+        Args:
+            guild_id (str): The guild to set the log channels in.
+            premium_support (str, optional): Channel to send logs of open support tickets to. Defaults to None.
+            tag_updates (str, optional): Channel to send logs of tags being updated to. Defaults to None.
+        """
+        data = {}
+        if premium_support is not None:
+            data["premium_support"] = premium_support
+        if tag_updates is not None:
+            data["tag_updates"] = tag_updates
+
+        if not data:
+            return
+
+        await self.db["config"].update_one(
+            {"_id": str(guild_id)},
+            update={"$set": data},
+            upsert=True,
+        )
+
+    async def get_log_channels(self, guild_id: str):
+        """Get all the log channels in a guild"""
+        cursor = await self.db["config"].find_one({"_id": str(guild_id)})
+        return cursor
