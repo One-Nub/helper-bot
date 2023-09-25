@@ -14,19 +14,20 @@ from helper_bot import instance as bot
 async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
     ## assign the tag to a variable
     tag = await bot.db.get_tag(name)
-
     try:
         ## if name is empty, raise error
         if name == "0":
             raise Exception("You forgot the tag name!")
-
+        if(ctx.interaction == None):
+            await ctx.message.delete()
         ## check if the tag exists
         if tag != None:
-            await ctx.message.delete()
             ## send the tag content + optional message
-            msg = await ctx.send(tag['content'])
-            if(message != "0"):
+            if(message != "0" and ctx.interaction == None):
+                msg = await ctx.send(tag['content'])
                 await msg.edit(content=f"{message} {tag['content']}")
+            elif(message != "0" and ctx.interaction != None):
+                await ctx.send(f"{message} {tag['content']}")
 
         ## if no tag found, raise error
         else:
