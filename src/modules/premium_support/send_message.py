@@ -13,7 +13,7 @@ from helper_bot import instance as bot
 
 
 @bot.tree.command(
-    name="send_premium",
+    name="premium_support_message",
     description="Send the premium support message to a channel.",
 )
 @app_commands.default_permissions(manage_guild=True)
