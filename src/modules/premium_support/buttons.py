@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from discord import AllowedMentions, ButtonStyle, ChannelType, Embed, Interaction, ui
 
 from constants import BLURPLE
@@ -39,10 +41,36 @@ async def support_button_handler(interaction: Interaction):
 
     view = ui.View(timeout=None)
 
-    # TODO: With database added, get the log channel and send a log msg to it saying a thread has been
-    # opened. THEN for the created message, add it to the button custom_id so that way on thread close
-    # the message is deleted.
-    button = ui.Button(style=ButtonStyle.secondary, emoji="🔒", label="Close", custom_id=f"lock_thread")
+    log_channels = await bot.db.get_log_channels(guild_id=interaction.guild.id)
+    log_channel = log_channels.get("premium_support", "")
+
+    custom_id = "lock_thread"
+    if log_channel:
+        custom_id += f":{log_channel}"
+
+    if log_channel:
+        channel = bot.get_channel(log_channel)
+        if not channel:
+            channel = await bot.fetch_channel(log_channel)
+
+        if channel:
+            log_embed = Embed(color=BLURPLE, title="Support Thread")
+            log_embed.add_field(
+                name=":book: Author",
+                value=f"{user.mention}\n{user.name}#{user.discriminator}",
+                inline=True,
+            )
+            log_embed.add_field(
+                name=":thread: Thread",
+                value=thread.mention,
+                inline=True,
+            )
+            log_embed.timestamp = datetime.utcnow()
+            message = await channel.send(embed=log_embed)
+
+            custom_id += f":{message.id}"
+
+    button = ui.Button(style=ButtonStyle.secondary, emoji="🔒", label="Close", custom_id=custom_id)
     view.add_item(button)
 
     await thread.send(
@@ -73,4 +101,10 @@ async def lock_button_handler(interaction: Interaction):
     if channel.type is ChannelType.private_thread:
         await channel.edit(archived=True, locked=True)
 
-    # TODO: Delete message from log channel
+    custom_id = interaction.data["custom_id"]
+    if ":" in custom_id:
+        split = custom_id.split(":")
+        channel_id = split[1]
+        message_id = split[2]
+
+        await bot.http.delete_message(channel_id=channel_id, message_id=message_id)
