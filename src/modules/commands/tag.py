@@ -11,8 +11,29 @@ from helper_bot import instance as bot
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
-async def tag(ctx: Context):
-    await ctx.reply("hello world")
+async def tag(ctx: Context, name: str = "0"):
+    tag_list = await bot.db.get_all_tags()
+    index = None
+
+    try:
+        ## if name or content is empty, raise error
+        if name == "0":
+            raise Exception("You forgot the tag name!")
+        
+        ## check if name is in tag list
+        #for tag in tag_list:
+            #if tag['_id'] == name:
+                #index = tag_list[tag].index()
+                #break
+       # if index != None:
+            #await ctx.send(index)
+        #else:
+            #await ctx.send("Tag was not found.")
+        
+
+    ## send the errorm essage
+    except Exception as Error:
+        await ctx.send(Error)
 
 
 @tag.command("add", description="Add a tag to the tag list.")
