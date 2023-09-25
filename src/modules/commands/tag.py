@@ -41,12 +41,12 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
 
 
 @tag.command("add", description="Add a tag to the tag list.")
-async def add_tag(ctx: Context, tag_name: str, *, tag_content: str):
+async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
         ## if name or content is empty, raise error
-        if tag_name == "" or tag_content == "":
+        if tag_name == "⅋" or tag_content == "⅋":
             raise Exception("Please provide both tag name and tag content.")
-        elif tag_content.__len__() > 2000:
+        if  tag_content.__len__() > 2000:
             raise Exception("Tag content exceeds maximum length.")
         else:
              tag_list = await bot.db.get_all_tags()
@@ -77,7 +77,7 @@ async def delete_tag(ctx: Context, name: str = "0"):
         for tag in tag_list:
             if tag['_id'] == name:
                 await bot.db.delete_tag(name)
-                await ctx.send(name + "tag has been deleted.")
+                await ctx.send(f"Tag `{name}` has been deleted.")
                 check = True
                 break
         
