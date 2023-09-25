@@ -6,8 +6,11 @@ from discord import Intents, utils
 import config
 from helper_bot import HelperBot
 
+BOT_TOKEN = os.environ.get("BOT_TOKEN", config.BOT_TOKEN)
+MONGO_URL = os.environ.get("MONGO_URL", config.MONGO_URL)
+
 intents = Intents(guilds=True, message_content=True, guild_messages=True, emojis=True)
-bot = HelperBot(command_prefix=".", intents=intents)
+bot = HelperBot(command_prefix=".", mongodb_url=MONGO_URL, intents=intents)
 
 MODULES = ["modules/commands", "modules/events", "modules/premium_support"]
 
