@@ -47,7 +47,10 @@ class HelperBot(commands.Bot):
 
         self.started_at = datetime.utcnow()
         self.button_handlers = {}
-        self.db = MongoDB(mongodb_url)
+        if mongodb_url:
+            self.db = MongoDB(mongodb_url)
+        else:
+            logging.error("NO MONGODB URL WAS FOUND.")
         instance = self
 
     @property

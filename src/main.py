@@ -9,14 +9,14 @@ from helper_bot import HelperBot
 BOT_TOKEN = os.environ.get("BOT_TOKEN", config.BOT_TOKEN)
 MONGO_URL = os.environ.get("MONGO_URL", config.MONGO_URL)
 
+utils.setup_logging(level=logging.INFO)
+
 intents = Intents(guilds=True, message_content=True, guild_messages=True, emojis=True)
 bot = HelperBot(command_prefix=".", mongodb_url=MONGO_URL, intents=intents)
 
 MODULES = ["modules/commands", "modules/events", "modules/premium_support"]
 
 if __name__ == "__main__":
-    utils.setup_logging(level=logging.INFO)
-
     ## loop through all the files under the commands folder, that's how we check for commands
     for directory in MODULES:
         files = [
