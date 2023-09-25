@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 "discord.py" = "^2.3.2"
 motor = { extras = ["srv"], version = "^3.3.1" }
+requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.9.1"
