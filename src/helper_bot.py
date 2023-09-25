@@ -169,7 +169,7 @@ class MongoDB:
 
         await self.db["tags"].update_one(
             filter=filter_query,
-            update={"$set": data},
+            update={"$set": data, "$setOnInsert": {"_id": name}},
             upsert=True,
         )
 
