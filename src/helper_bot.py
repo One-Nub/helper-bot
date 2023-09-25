@@ -131,11 +131,16 @@ class MongoDB:
         content: str,
         aliases: list[str] = None,
         author: str = None,
-        use_count: int = 0,
+        use_count: int = None,
         created_at: datetime = None,
         updated_at: datetime = None,
     ):
         """Insert or update a tag in the database based on its name or alias.
+
+        Only updates values based on what you give it, example if you don't include use_count
+        it will not modify it.
+
+        Aliases *WILL* be CLEARED if it is not passed with the current values (if any).
 
         Args:
             name (str): Name of the tag that should be updated.
@@ -149,8 +154,10 @@ class MongoDB:
         data = {
             "content": content,
             "aliases": aliases if aliases else [],
-            "use_count": use_count,
         }
+        if use_count is not None:
+            data["use_count"] = use_count
+
         if author is not None:
             data["author"] = author
 
