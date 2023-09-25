@@ -1,7 +1,7 @@
 import importlib
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional, Type
+from typing import Any, Literal, Optional, Type
 
 import discord
 from discord.app_commands import CommandTree
@@ -221,3 +221,12 @@ class MongoDB:
         """Get all the log channels in a guild"""
         cursor = await self.db["config"].find_one({"_id": str(guild_id)})
         return cursor
+
+    async def unset_log_channel(self, guild_id: str, log_type: Literal["premium_support", "tag_updates"]):
+        """Unset a log channel
+
+        Args:
+            guild_id (str): The guild ID to modify the settings for.
+            log_type ("Literal['premium_support', 'tag_updates']"): The type of log to remove from the database.
+        """
+        await self.db["config"].update_one({"_id": str(guild_id)}, update={"$unset": {log_type: ""}})
