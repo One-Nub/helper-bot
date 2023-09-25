@@ -16,8 +16,21 @@ async def tag(ctx: Context):
 
 
 @tag.command("add", description="Add a tag to the tag list.")
-async def add_tag(ctx: Context):
-    await ctx.reply("attempted to add a tag")
+async def add_tag(ctx: Context, content: str = "0"):
+    try:
+        ## if name or content is empty, raise error
+        if content == "0":
+            raise Exception("You forgot the tag name!")
+        
+
+        await ctx.send(content)
+        
+        ## add the tag to db
+    
+    ## send the errorm essage
+    except Exception as Error:
+        await ctx.send(Error)
+        
 
 
 @tag.command("delete", description="Remove a tag from the tag list.")
