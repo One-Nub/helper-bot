@@ -11,7 +11,7 @@ from helper_bot import instance as bot
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
-async def tag(ctx: Context, name: str = "0", message: str = "0"):
+async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
     tag_list = await bot.db.get_all_tags()
     check = False
 
@@ -23,11 +23,11 @@ async def tag(ctx: Context, name: str = "0", message: str = "0"):
         ## extract the tag data
         for tag in tag_list:
             if tag['_id'] == name:
+                await ctx.message.delete()
                 ## send the tag content + optional message
-                if message != "0":
-                    await ctx.send(message)
-                await ctx.send(tag['content'])
-                
+                msg = await ctx.send(tag['content'])
+                if(message != "0"):
+                    await msg.edit(content=f"{message} {tag['content']}")
                 check = True
                 break
 
@@ -41,7 +41,7 @@ async def tag(ctx: Context, name: str = "0", message: str = "0"):
 
 
 @tag.command("add", description="Add a tag to the tag list.")
-async def add_tag(ctx: Context, tag_name: str = "", tag_content: str=""):
+async def add_tag(ctx: Context, tag_name: str, *, tag_content: str):
     try:
         ## if name or content is empty, raise error
         if tag_name == "" or tag_content == "":
@@ -51,7 +51,7 @@ async def add_tag(ctx: Context, tag_name: str = "", tag_content: str=""):
              tag_names = [tag["_id"] for tag in tag_list]
              if(tag_name in tag_names):
                  raise Exception("Tag already exists.")
-             await bot.db.update_tag(tag_name, tag_content)
+             await bot.db.update_tag(tag_name, tag_content,aliases=None,author=ctx.author.id, use_count=0, created_at=datetime.now(), updated_at=datetime.now())
              await ctx.send(f"Tag `{tag_name}` has been added.")
         ## add the tag to db
     
