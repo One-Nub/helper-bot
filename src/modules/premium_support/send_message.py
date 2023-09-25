@@ -13,11 +13,12 @@ from helper_bot import instance as bot
 
 
 @bot.tree.command(
-    name="send_premium",
+    name="premium_support_message",
     description="Send the premium support message to a channel.",
 )
 @app_commands.default_permissions(manage_guild=True)
 @app_commands.describe(channel="The channel to send the message to.")
+@app_commands.guild_only()
 async def send_premium_msg(interaction: Interaction, channel: TextChannel):
     view: ui.View = ui.View(timeout=None)
 

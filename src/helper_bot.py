@@ -1,7 +1,7 @@
 import importlib
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional, Type
+from typing import Any, Literal, Optional, Type
 
 import discord
 from discord.app_commands import CommandTree
@@ -131,11 +131,16 @@ class MongoDB:
         content: str,
         aliases: list[str] = None,
         author: str = None,
-        use_count: int = 0,
+        use_count: int = None,
         created_at: datetime = None,
         updated_at: datetime = None,
     ):
         """Insert or update a tag in the database based on its name or alias.
+
+        Only updates values based on what you give it, example if you don't include use_count
+        it will not modify it.
+
+        Aliases *WILL* be CLEARED if it is not passed with the current values (if any).
 
         Args:
             name (str): Name of the tag that should be updated.
@@ -149,8 +154,10 @@ class MongoDB:
         data = {
             "content": content,
             "aliases": aliases if aliases else [],
-            "use_count": use_count,
         }
+        if use_count is not None:
+            data["use_count"] = use_count
+
         if author is not None:
             data["author"] = author
 
@@ -169,7 +176,7 @@ class MongoDB:
 
         await self.db["tags"].update_one(
             filter=filter_query,
-            update={"$set": data},
+            update={"$set": data, "$setOnInsert": {"_id": name}},
             upsert=True,
         )
 
@@ -186,3 +193,40 @@ class MongoDB:
             ],
         }
         await self.db["tags"].delete_one(query)
+
+    async def set_log_channel(self, guild_id: str, premium_support: str = None, tag_updates: str = None):
+        """Set the log channel(s) in a guild
+
+        Args:
+            guild_id (str): The guild to set the log channels in.
+            premium_support (str, optional): Channel to send logs of open support tickets to. Defaults to None.
+            tag_updates (str, optional): Channel to send logs of tags being updated to. Defaults to None.
+        """
+        data = {}
+        if premium_support is not None:
+            data["premium_support"] = premium_support
+        if tag_updates is not None:
+            data["tag_updates"] = tag_updates
+
+        if not data:
+            return
+
+        await self.db["config"].update_one(
+            {"_id": str(guild_id)},
+            update={"$set": data},
+            upsert=True,
+        )
+
+    async def get_log_channels(self, guild_id: str):
+        """Get all the log channels in a guild"""
+        cursor = await self.db["config"].find_one({"_id": str(guild_id)})
+        return cursor
+
+    async def unset_log_channel(self, guild_id: str, log_type: Literal["premium_support", "tag_updates"]):
+        """Unset a log channel
+
+        Args:
+            guild_id (str): The guild ID to modify the settings for.
+            log_type ("Literal['premium_support', 'tag_updates']"): The type of log to remove from the database.
+        """
+        await self.db["config"].update_one({"_id": str(guild_id)}, update={"$unset": {log_type: ""}})
