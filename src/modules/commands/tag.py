@@ -24,10 +24,10 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
         if tag != None:
             ## send the tag content + optional message
             if(message != "0" and ctx.interaction == None):
-                msg = await ctx.send(tag['content'])
-                await msg.edit(content=f"{message} {tag['content']}")
+                msg = await ctx.send(tag['content'], allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
+                await msg.edit(content=f"{message} {tag['content']}", allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
             elif(message != "0" and ctx.interaction != None):
-                await ctx.send(f"{message} {tag['content']}")
+                await ctx.send(f"{message} {tag['content']}", allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
 
         ## if no tag found, raise error
         else:
