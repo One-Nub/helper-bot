@@ -28,17 +28,25 @@ async def delete_tag(ctx: Context):
 
 @tag.command("all", description="View all the tags in the tag list.")
 async def view_tag(ctx: Context):
-    await ctx.reply("attempted to view all tags")
-    '''try:
+    try:
 
         # get the tag data
-        cookielist = final_list[1]
+        taglist = await bot.db.get_all_tags()
+        tagnames = []
+
+        # get all the tag names
+        for key in range(0, len(taglist)):
+            tagnames.append(taglist[key]['_id'])
+        
+        # sort the tag names
+        tagnames.sort(reverse = False)
+
 
         # pages stuff
-        count = 10
+        count = 20
         pages = 1
-        while len(cookielist) > count:
-            count += 10
+        while len(taglist) > count:
+            count += 20
             pages += 1
     
         # each page has a different set of users
@@ -46,51 +54,43 @@ async def view_tag(ctx: Context):
         mainlist = []
 
         for current_page in range(0, pages):
-            x = current_page * 10
-            y = x + 10
-            mainlist.append(cookielist[x:y])
+            x = current_page * 20
+            y = x + 20
+            mainlist.append(tagnames[x:y])
 
 
     
         # build the embed ---------------------
         async def build_embed(cur_page):
             embed_tags = discord.Embed(
-                title = "Leaderboard",
-                description = "desc",
+                title = "All Tags",
+                description = "----------",
                 color = 0x7289da,
                 )
     
-            # set the server icon
-            embed_tags.set_thumbnail(url = ctx.guild.icon)
-
+            # set some variables
             currentlist = mainlist[cur_page - 1]
-
             mystr = ""
-            # build the leaderboard
+
+
+            # build the embed
             for key in currentlist:
-                # try to get_user, if none then fetch
-                if ctx.bot.get_user(key) == None:
-                    user = await ctx.bot.fetch_user(key)
-                else:
-                    user = ctx.bot.get_user(key)
-        
-                # setting variables for organization
                 index = currentlist.index(key) + 1
 
 
                 # building the lines in an embed
-                mystr += "this is a line in the embed"
+                mystr += key + "\n"
 
-                if index == 5 or index == 10:
+                if index == 10 or index == 20:
                     embed_tags.add_field(name = "", value = mystr, inline = True)
+                    mystr = key + "\n"
                     mystr = ""
 
             # make sure the embeds send even if we didn't hit 5 or 10 users
-            if len(currentlist) < 5:
+            if len(currentlist) < 10:
                 embed_tags.add_field(name = " ", value = mystr, inline = True)
-            if len(currentlist) > 5 and len(currentlist) < 10:
+            if len(currentlist) > 10 and len(currentlist) < 20:
                 embed_tags.add_field(name = " ", value = mystr, inline = True)
-
 
 
             # footer
@@ -100,19 +100,33 @@ async def view_tag(ctx: Context):
 
 
 
+        ## get the user for reactions
+        if ctx.bot.get_user(ctx.author.id) == None:
+            user = await ctx.bot.fetch_user(ctx.author.id)
+        else:
+            user = ctx.bot.get_user(ctx.author.id)
+
+
+
+
+
+        ## send the reactions part, nub pls fix this for buttons ------
         send_embed = await ctx.send(embed = await build_embed(cur_page))
         if pages != 1:
             await send_embed.add_reaction("◀️")
             await send_embed.add_reaction("🗑️")
             await send_embed.add_reaction("▶️")
 
-            # This makes sure nobody except the command sender can interact with the menu
+            ## checks if the author is the only one reacting
             def check(reaction, user):
                 return user == ctx.author and str(reaction.emoji) in ["◀️", "🗑️", "▶️"]
+
     
+
+            ## this is the reactions part, nub replace this with buttons ty --------
             while True:
                 try:
-                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=120, check=check)
+                    reaction, user = await ctx.bot.wait_for("reaction_add", timeout=120, check = check)
                     # waiting for a reaction to be added - times out after 120 seconds
                     if str(reaction.emoji) == "▶️" and cur_page != pages:
                         cur_page += 1
@@ -138,4 +152,4 @@ async def view_tag(ctx: Context):
 
     # exception handling
     except Exception as Error:
-        await ctx.send(Error)'''
+        await ctx.send(Error)
