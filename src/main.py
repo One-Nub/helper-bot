@@ -1,15 +1,17 @@
 import logging
 import os
 
-from discord import Intents, utils
+from discord import AllowedMentions, Intents, utils
 
 from resources.helper_bot import HelperBot
 from resources.secrets import BOT_TOKEN, MONGO_URL  # pylint: disable=E0611
 
 utils.setup_logging(level=logging.INFO)
 
+allowed_mentions = AllowedMentions(roles=False, users=True, everyone=False)
+
 intents = Intents(guilds=True, message_content=True, guild_messages=True, emojis=True)
-bot = HelperBot(command_prefix=".", mongodb_url=MONGO_URL, intents=intents)
+bot = HelperBot(command_prefix=".", mongodb_url=MONGO_URL, intents=intents, allowed_mentions=allowed_mentions)
 
 MODULES = ["modules/commands", "modules/events", "modules/premium_support"]
 
