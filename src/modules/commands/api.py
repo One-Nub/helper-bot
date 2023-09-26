@@ -1,4 +1,4 @@
-import json
+import os
 from datetime import datetime
 
 import discord
@@ -21,10 +21,12 @@ async def api(ctx: Context, lookup_id: int = 0):
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
 
         else:
+            API_KEY = os.environ.get("BLOXLINK_API_KEY", config.BLOXLINK_API_KEY)
+
             guild = 372036754078826496
             string = f"https://api.blox.link/v4/public/guilds/{guild}/discord-to-roblox/{lookup_id}"
 
-            x = requests.get(string, headers={"Authorization": config.API_KEY})
+            x = requests.get(string, headers={"Authorization": API_KEY}, timeout=5)
             response = x.json()
 
             if response.get("resolved") != None:
