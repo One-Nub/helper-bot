@@ -68,6 +68,8 @@ async def add_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â…
             if check_tag != None:
                 raise Exception("Tag already exists.")
 
+            tag_content = "\n".join(tag_content.split("\\n"))
+
             await bot.db.update_tag(
                 tag_name,
                 tag_content,
