@@ -5,9 +5,9 @@ import discord
 import requests
 from discord.ext.commands import Context
 
-import config
 from resources.constants import BLURPLE, RED
 from resources.helper_bot import instance as bot
+from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
 
 
 @bot.command("api", description="Fetch information via Bloxlink API.")
@@ -21,12 +21,10 @@ async def api(ctx: Context, lookup_id: int = 0):
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
 
         else:
-            API_KEY = os.environ.get("BLOXLINK_API_KEY", config.BLOXLINK_API_KEY)
-
             guild = 372036754078826496
             string = f"https://api.blox.link/v4/public/guilds/{guild}/discord-to-roblox/{lookup_id}"
 
-            x = requests.get(string, headers={"Authorization": API_KEY}, timeout=5)
+            x = requests.get(string, headers={"Authorization": BLOXLINK_API_KEY}, timeout=5)
             response = x.json()
 
             if response.get("resolved") != None:

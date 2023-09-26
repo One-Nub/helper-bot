@@ -3,11 +3,8 @@ import os
 
 from discord import Intents, utils
 
-import config
 from resources.helper_bot import HelperBot
-
-BOT_TOKEN = os.environ.get("BOT_TOKEN", config.BOT_TOKEN)
-MONGO_URL = os.environ.get("MONGO_URL", config.MONGO_URL)
+from resources.secrets import BOT_TOKEN, MONGO_URL  # pylint: disable=E0611
 
 utils.setup_logging(level=logging.INFO)
 
@@ -31,4 +28,4 @@ if __name__ == "__main__":
 
             bot.load_module(f"{directory.replace('/','.')}.{filename}")
 
-    bot.run(token=config.BOT_TOKEN, log_handler=None)
+    bot.run(token=BOT_TOKEN, log_handler=None)
