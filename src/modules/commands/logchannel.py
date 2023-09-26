@@ -3,6 +3,7 @@ import typing
 from discord import Embed, Interaction, Permissions, TextChannel, app_commands
 from discord.app_commands import Choice
 
+from resources.checks import is_staff
 from resources.helper_bot import instance as bot
 
 logchannel = app_commands.Group(
@@ -24,6 +25,7 @@ logchannel = app_commands.Group(
         Choice(name="General logs", value=1),
     ]
 )
+@app_commands.check(is_staff)
 async def set_log_channels(
     interaction: Interaction, log_type: Choice[int], channel: typing.Optional[TextChannel]
 ):
@@ -54,6 +56,7 @@ async def set_log_channels(
 
 
 @logchannel.command(name="view", description="View your currently set log channels.")
+@app_commands.check(is_staff)
 async def view_log_channels(interaction: Interaction):
     data = await bot.db.get_log_channels(interaction.guild_id)
 
@@ -69,6 +72,18 @@ async def view_log_channels(interaction: Interaction):
     )
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+@logchannel.error
+async def on_error(interaction: Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.CheckFailure):
+        await interaction.response.send_message(
+            content="You do not have permissions to use this command!",
+            ephemeral=True,
+        )
+        return
+
+    raise error
 
 
 bot.tree.add_command(logchannel)
