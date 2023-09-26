@@ -141,12 +141,11 @@ class MongoDB:
         Only updates values based on what you give it, example if you don't include use_count
         it will not modify it.
 
-        Aliases *WILL* be CLEARED if it is not passed with the current values (if any).
-
         Args:
             name (str): Name of the tag that should be updated.
             content (str): The content that the tag should show.
             aliases (list[str], optional): Alternate names for the tag if any. Defaults to None.
+                KEY NOTE: MUST BE AN EXHAUSTIVE LIST OF *ALL* ALIASES FOR THIS TAG.
             author (str, optional): ID of the author. Defaults to None.
             use_count (int, optional): Number of times the tag has been used. Defaults to 0.
             created_at (datetime, optional): Date the command was created at. Defaults to None.
@@ -154,8 +153,11 @@ class MongoDB:
         """
         data = {
             "content": content,
-            "aliases": aliases if aliases else [],
         }
+
+        if aliases:
+            data["aliases"] = aliases
+
         if use_count is not None:
             data["use_count"] = use_count
 
