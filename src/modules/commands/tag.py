@@ -11,18 +11,74 @@ from helper_bot import instance as bot
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
-async def tag(ctx: Context):
-    await ctx.reply("hello world")
+async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
+    ## assign the tag to a variable
+    tag = await bot.db.get_tag(name)
+    try:
+        ## if name is empty, raise error
+        if name == "0":
+            raise Exception("You forgot the tag name!")
+        if(ctx.interaction == None):
+            await ctx.message.delete()
+        ## check if the tag exists
+        if tag != None:
+            ## send the tag content + optional message
+            if(message != "0" and ctx.interaction == None):
+                msg = await ctx.send(tag['content'], allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
+                await msg.edit(content=f"{message} {tag['content']}", allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
+            elif(message != "0" and ctx.interaction != None):
+                await ctx.send(f"{message} {tag['content']}", allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
+
+        ## if no tag found, raise error
+        else:
+            raise Exception("Tag was not found.")
+
+
+    ## send the errorm essage
+    except Exception as Error:
+        await ctx.send(Error)
 
 
 @tag.command("add", description="Add a tag to the tag list.")
-async def add_tag(ctx: Context):
-    await ctx.reply("attempted to add a tag")
+async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
+    try:
+        ## if name or content is empty, raise error
+        if tag_name == "⅋" or tag_content == "⅋":
+            raise Exception("Please provide both tag name and tag content.")
+        if  tag_content.__len__() > 2000:
+            raise Exception("Tag content exceeds maximum length.")
+        else:
+             check_tag = await bot.db.get_tag(tag_name)
+             if(check_tag != None):
+                 raise Exception("Tag already exists.")
+             await bot.db.update_tag(tag_name, tag_content,aliases=None,author=ctx.author.id, use_count=0, created_at=datetime.now(), updated_at=datetime.now())
+             await ctx.send(f"Tag `{tag_name}` has been added.")
+        ## add the tag to db
+    
+    ## send the errorm essage
+    except Exception as Error:
+        await ctx.send(Error)
+        
 
 
 @tag.command("delete", description="Remove a tag from the tag list.")
-async def delete_tag(ctx: Context):
-    await ctx.reply("attempted to remove a tag")
+async def delete_tag(ctx: Context, name: str = "0"):
+    try:
+        ## if name is empty, raise error
+        if name == "0":
+            raise Exception("You forgot the tag name!")
+        
+        ## delete the tag
+        if await bot.db.get_tag(name) != None:
+            await bot.db.delete_tag(name)
+            await ctx.send("Tag has been deleted.")
+        ## if no tag found, raise error
+        else:
+            raise Exception("Tag was not found.")
+
+    ## send the error message
+    except Exception as Error:
+        await ctx.send(Error)
 
 
 ## tags command
