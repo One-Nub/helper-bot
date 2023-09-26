@@ -60,7 +60,7 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
         if tag_name == "⅋" or tag_content == "⅋":
             raise Exception("Please provide both tag name and tag content.")
 
-        if tag_content.__len__() > 2000:
+        if len(tag_content) > 2000:
             raise Exception("Tag content exceeds maximum length.")
 
         else:
