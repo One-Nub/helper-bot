@@ -87,6 +87,37 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
     except Exception as Error:
         await ctx.send(Error)
 
+@tag_base.command("edit", description="Edit a current tag in the list.")
+@check(is_staff)
+async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
+    try:
+        ## if name or content is empty, raise error
+        if tag_name == "⅋" or tag_content == "⅋":
+            raise Exception("Please provide both tag name and tag content.")
+
+        if len(tag_content) > 2000:
+            raise Exception("Tag content exceeds maximum length.")
+
+        else:
+            check_tag = await bot.db.get_tag(tag_name)
+            if check_tag == None:
+                raise Exception("Tag does not exist. Please create the tag with `tag add` instead.")
+
+            tag_content = "\n".join(tag_content.split("\\n"))
+
+            await bot.db.update_tag(
+                tag_name,
+                tag_content,
+                author=ctx.author.id,
+                updated_at=datetime.now(),
+            )
+
+            await ctx.send(f"Tag `{tag_name}` has been edited.")
+        ## add the tag to db
+
+    ## send the error message
+    except Exception as Error:
+        await ctx.send(Error)
 
 @tag_base.command("delete", description="Remove a tag from the tag list.")
 @check(is_staff)
