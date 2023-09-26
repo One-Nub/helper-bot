@@ -12,15 +12,18 @@ from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
 @bot.command("api", description="Fetch information via Bloxlink API.")
 async def api(ctx: Context, lookup_id: int = 0):
     """Fetch information from the Bloxlink API!"""
+    guild = 372036754078826496
     try:
-        if lookup_id == 0:
+        if ctx.guild.id != guild:
+            raise Exception("This command can only be used in the Bloxlink HQ Server.")
+        
+        elif lookup_id == 0:
             raise Exception("Missing argument `id`. Please provide a valid Discord ID.")
 
         elif len(str(lookup_id)) < 17:
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
-
+        
         else:
-            guild = 372036754078826496
             string = f"https://api.blox.link/v4/public/guilds/{guild}/discord-to-roblox/{lookup_id}"
 
             x = requests.get(string, headers={"Authorization": BLOXLINK_API_KEY}, timeout=5)
