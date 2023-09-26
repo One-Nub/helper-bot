@@ -42,8 +42,15 @@ async def on_command_error(ctx: Context, error: CommandError):
                 await ctx.message.delete()
 
         case MissingRequiredArgument():
+            param = error.param.name
+            message = f"You're missing the required {param} argument!"
+
+            if ctx.command.name.startswith("tag"):
+                param = "the tag content" if param == "tag_content" else "the tag name"
+                message = f"You're missing {param}!"
+
             await ctx.reply(
-                content=f"You're missing a required argument!\n> {str(error).capitalize()}",
+                content=message,
                 mention_author=False,
                 delete_after=5.0,
                 ephemeral=True,
