@@ -9,9 +9,11 @@ from resources.checks import is_staff
 from resources.constants import UNICODE_LEFT, UNICODE_RIGHT
 from resources.helper_bot import instance as bot
 
+MAX_TAGS_PER_PAGE = 20
+
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
-async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
+async def tag_base(ctx: Context, name: str, *, message: str = "0"):
     try:
         ## if name is empty, raise error
         if name == "0":
@@ -19,7 +21,7 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
 
         tag = await bot.db.get_tag(name)
         if tag is None:
-            raise Exception("Tag was not found.")
+            raise Exception(f'The tag "{name}" was not found!')
 
         if ctx.interaction == None:
             await ctx.message.delete()
@@ -39,16 +41,18 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
     except Exception as Error:
         await ctx.send(
             Error,
-            delete_after=3.0 if ctx.message else None,
-            reference=ctx.message if ctx.message else None,
+            delete_after=4.0 if not ctx.interaction else None,
+            reference=ctx.message,
+            mention_author=True,
             silent=True,
+            ephemeral=True,
         )
 
         if ctx.interaction == None:
             await ctx.message.delete()
 
 
-@tag.command("add", description="Add a tag to the tag list.")
+@tag_base.command("add", description="Add a tag to the tag list.")
 @check(is_staff)
 async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
@@ -82,7 +86,7 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
         await ctx.send(Error)
 
 
-@tag.command("delete", description="Remove a tag from the tag list.")
+@tag_base.command("delete", description="Remove a tag from the tag list.")
 @check(is_staff)
 async def delete_tag(ctx: Context, name: str = "0"):
     try:
@@ -103,12 +107,7 @@ async def delete_tag(ctx: Context, name: str = "0"):
         await ctx.send(Error)
 
 
-## tags command
-
-MAX_PER_PAGE = 20
-
-
-@tag.command("all", description="View all the tags in the tag list.")
+@tag_base.command("all", description="View all the tags in the tag list.")
 async def view_tag(ctx: Context):
     # Get tags from the db, get their names, then sort alphabetically
     tag_list = await bot.db.get_all_tags()
@@ -116,7 +115,7 @@ async def view_tag(ctx: Context):
     tag_names.sort(reverse=False)
 
     # Determine max # of pages
-    max_pages = math.ceil(len(tag_names) / MAX_PER_PAGE)
+    max_pages = math.ceil(len(tag_names) / MAX_TAGS_PER_PAGE)
 
     # Build generic buttons into a view
     view = ui.View(timeout=None)
@@ -205,11 +204,11 @@ async def view_tag_buttons(interaction: discord.Interaction):
 
 
 async def build_page(avatar_url: str, items: list[str], page_num: int = 0):
-    max_pages = math.ceil(len(items) / MAX_PER_PAGE)
+    max_pages = math.ceil(len(items) / MAX_TAGS_PER_PAGE)
 
     # Grab the 20 elements that we care about
-    offset = page_num * MAX_PER_PAGE
-    tag_names = items[offset : offset + MAX_PER_PAGE]
+    offset = page_num * MAX_TAGS_PER_PAGE
+    tag_names = items[offset : offset + MAX_TAGS_PER_PAGE]
 
     # Build the embed.
     embed_tags = discord.Embed(
