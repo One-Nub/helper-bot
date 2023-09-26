@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 
 import discord
 from discord import ui
-from discord.ext.commands import Context
+from discord.ext.commands import Context, check
 
+from resources.checks import is_staff
 from resources.constants import UNICODE_LEFT, UNICODE_RIGHT
 from resources.helper_bot import instance as bot
 
@@ -48,6 +49,7 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
 
 
 @tag.command("add", description="Add a tag to the tag list.")
+@check(is_staff)
 async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
         ## if name or content is empty, raise error
@@ -81,6 +83,7 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
 
 
 @tag.command("delete", description="Remove a tag from the tag list.")
+@check(is_staff)
 async def delete_tag(ctx: Context, name: str = "0"):
     try:
         ## if name is empty, raise error
