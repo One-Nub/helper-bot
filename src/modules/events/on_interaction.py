@@ -2,7 +2,7 @@ import logging
 
 from discord import Interaction, InteractionType
 
-from helper_bot import instance as bot
+from resources.helper_bot import instance as bot
 
 
 @bot.event

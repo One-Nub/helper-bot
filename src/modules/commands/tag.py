@@ -5,8 +5,8 @@ import discord
 from discord import ui
 from discord.ext.commands import Context
 
-from constants import UNICODE_LEFT, UNICODE_RIGHT
-from helper_bot import instance as bot
+from resources.constants import UNICODE_LEFT, UNICODE_RIGHT
+from resources.helper_bot import instance as bot
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")

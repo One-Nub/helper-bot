@@ -2,8 +2,8 @@ from datetime import datetime
 
 from discord import AllowedMentions, ButtonStyle, ChannelType, Embed, Interaction, ui
 
-from constants import BLURPLE
-from helper_bot import instance as bot
+from resources.constants import BLURPLE
+from resources.helper_bot import instance as bot
 
 
 @bot.register_button_handler("premium_support")

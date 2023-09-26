@@ -8,8 +8,8 @@ from discord import (
     ui,
 )
 
-from constants import BLURPLE
-from helper_bot import instance as bot
+from resources.constants import BLURPLE
+from resources.helper_bot import instance as bot
 
 
 @bot.tree.command(

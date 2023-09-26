@@ -6,8 +6,8 @@ import requests
 from discord.ext.commands import Context
 
 import config
-from constants import BLURPLE, RED
-from helper_bot import instance as bot
+from resources.constants import BLURPLE, RED
+from resources.helper_bot import instance as bot
 
 
 @bot.command("api", description="Fetch information via Bloxlink API.")

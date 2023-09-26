@@ -3,7 +3,7 @@ import typing
 from discord import Embed, Interaction, Permissions, TextChannel, app_commands
 from discord.app_commands import Choice
 
-from helper_bot import instance as bot
+from resources.helper_bot import instance as bot
 
 logchannel = app_commands.Group(
     name="logchannel",

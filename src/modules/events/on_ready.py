@@ -1,6 +1,6 @@
 import logging
 
-from helper_bot import instance as bot
+from resources.helper_bot import instance as bot
 
 
 @bot.event

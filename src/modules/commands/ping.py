@@ -1,6 +1,6 @@
 from discord.ext.commands import Context
 
-from helper_bot import instance as bot
+from resources.helper_bot import instance as bot
 
 
 @bot.command("ping", description="Check the bot's latency.")

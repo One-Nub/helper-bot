@@ -1,6 +1,6 @@
 from discord.ext.commands import CommandNotFound
 
-from helper_bot import instance as bot
+from resources.helper_bot import instance as bot
 
 
 @bot.event
