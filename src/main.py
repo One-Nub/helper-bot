@@ -4,7 +4,7 @@ import os
 from discord import Intents, utils
 
 import config
-from helper_bot import HelperBot
+from resources.helper_bot import HelperBot
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", config.BOT_TOKEN)
 MONGO_URL = os.environ.get("MONGO_URL", config.MONGO_URL)
