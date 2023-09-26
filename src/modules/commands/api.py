@@ -2,14 +2,16 @@ from datetime import datetime
 
 import discord
 import requests
-from discord.ext.commands import Context
+from discord.ext.commands import Context, check
 
 from resources.constants import BLURPLE, RED
+from resources.checks import is_staff
 from resources.helper_bot import instance as bot
 from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
 
 
 @bot.command("api", description="Fetch information via Bloxlink API.")
+@check(is_staff)
 async def api(ctx: Context, lookup_id: int = 0):
     """Fetch information from the Bloxlink API!"""
     guild = 372036754078826496
