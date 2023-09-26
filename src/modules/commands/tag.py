@@ -11,42 +11,40 @@ from helper_bot import instance as bot
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
 async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
-    ## assign the tag to a variable
-    tag = await bot.db.get_tag(name)
     try:
         ## if name is empty, raise error
         if name == "0":
             raise Exception("You forgot the tag name!")
 
+        tag = await bot.db.get_tag(name)
+        if tag is None:
+            raise Exception("Tag was not found.")
+
         if ctx.interaction == None:
             await ctx.message.delete()
 
-        ## check if the tag exists
-        if tag != None:
-            ## send the tag content + optional message
-            if message != "0" and ctx.interaction == None:
-                msg = await ctx.send(
-                    tag["content"],
-                    allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False),
-                )
-                await msg.edit(
-                    content=f"{message} {tag['content']}",
-                    allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False),
-                )
+        allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False)
 
-            elif message != "0" and ctx.interaction != None:
-                await ctx.send(
-                    f"{message} {tag['content']}",
-                    allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False),
-                )
+        if message == "0":
+            message = ""
 
-        ## if no tag found, raise error
-        else:
-            raise Exception("Tag was not found.")
+        msg = await ctx.send(
+            f"{message} {tag['content']}",
+            allowed_mentions=allowed_mentions,
+            reference=ctx.message.reference,
+        )
 
-    ## send the errorm essage
+    ## send the error message
     except Exception as Error:
-        await ctx.send(Error)
+        await ctx.send(
+            Error,
+            delete_after=3.0 if ctx.message else None,
+            reference=ctx.message if ctx.message else None,
+            silent=True,
+        )
+
+        if ctx.interaction == None:
+            await ctx.message.delete()
 
 
 @tag.command("add", description="Add a tag to the tag list.")
@@ -77,7 +75,7 @@ async def add_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â…
             await ctx.send(f"Tag `{tag_name}` has been added.")
         ## add the tag to db
 
-    ## send the errorm essage
+    ## send the error message
     except Exception as Error:
         await ctx.send(Error)
 
