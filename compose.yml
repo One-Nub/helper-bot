@@ -1,0 +1,12 @@
+services:
+  bot:
+    container_name: "helper_bot"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    env_file: stack.env
+    deploy:
+      resources:
+        limits:
+          memory: 500M
