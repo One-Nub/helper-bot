@@ -14,6 +14,7 @@ async def on_command_error(ctx: Context, error: CommandError):
                 content="You do not have permissions to use this command!",
                 mention_author=False,
                 delete_after=5.0,
+                ephemeral=True,
             )
 
             if not ctx.interaction:
