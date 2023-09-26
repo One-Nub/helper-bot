@@ -162,7 +162,7 @@ class MongoDB:
             data["use_count"] = use_count
 
         if author is not None:
-            data["author"] = author
+            data["author"] = str(author)
 
         if created_at is not None:
             data["created_at"] = created_at.isoformat()
