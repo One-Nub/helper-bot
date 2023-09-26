@@ -1,4 +1,3 @@
-import asyncio
 import math
 from datetime import datetime, timedelta
 
@@ -18,21 +17,32 @@ async def tag(ctx: Context, name: str = "0", *, message: str = "0"):
         ## if name is empty, raise error
         if name == "0":
             raise Exception("You forgot the tag name!")
-        if(ctx.interaction == None):
+
+        if ctx.interaction == None:
             await ctx.message.delete()
+
         ## check if the tag exists
         if tag != None:
             ## send the tag content + optional message
-            if(message != "0" and ctx.interaction == None):
-                msg = await ctx.send(tag['content'], allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
-                await msg.edit(content=f"{message} {tag['content']}", allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
-            elif(message != "0" and ctx.interaction != None):
-                await ctx.send(f"{message} {tag['content']}", allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False))
+            if message != "0" and ctx.interaction == None:
+                msg = await ctx.send(
+                    tag["content"],
+                    allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False),
+                )
+                await msg.edit(
+                    content=f"{message} {tag['content']}",
+                    allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False),
+                )
+
+            elif message != "0" and ctx.interaction != None:
+                await ctx.send(
+                    f"{message} {tag['content']}",
+                    allowed_mentions=discord.AllowedMentions(roles=False, users=True, everyone=False),
+                )
 
         ## if no tag found, raise error
         else:
             raise Exception("Tag was not found.")
-
 
     ## send the errorm essage
     except Exception as Error:
@@ -45,20 +55,31 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
         ## if name or content is empty, raise error
         if tag_name == "⅋" or tag_content == "⅋":
             raise Exception("Please provide both tag name and tag content.")
-        if  tag_content.__len__() > 2000:
+
+        if tag_content.__len__() > 2000:
             raise Exception("Tag content exceeds maximum length.")
+
         else:
-             check_tag = await bot.db.get_tag(tag_name)
-             if(check_tag != None):
-                 raise Exception("Tag already exists.")
-             await bot.db.update_tag(tag_name, tag_content,aliases=None,author=ctx.author.id, use_count=0, created_at=datetime.now(), updated_at=datetime.now())
-             await ctx.send(f"Tag `{tag_name}` has been added.")
+            check_tag = await bot.db.get_tag(tag_name)
+            if check_tag != None:
+                raise Exception("Tag already exists.")
+
+            await bot.db.update_tag(
+                tag_name,
+                tag_content,
+                aliases=None,
+                author=ctx.author.id,
+                use_count=0,
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+            )
+
+            await ctx.send(f"Tag `{tag_name}` has been added.")
         ## add the tag to db
-    
+
     ## send the errorm essage
     except Exception as Error:
         await ctx.send(Error)
-        
 
 
 @tag.command("delete", description="Remove a tag from the tag list.")
@@ -67,7 +88,7 @@ async def delete_tag(ctx: Context, name: str = "0"):
         ## if name is empty, raise error
         if name == "0":
             raise Exception("You forgot the tag name!")
-        
+
         ## delete the tag
         if await bot.db.get_tag(name) != None:
             await bot.db.delete_tag(name)
