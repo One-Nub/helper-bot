@@ -89,7 +89,7 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
 
 @tag_base.command("edit", description="Edit a current tag in the list.")
 @check(is_staff)
-async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
+async def edit_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
         ## if name or content is empty, raise error
         if tag_name == "⅋" or tag_content == "⅋":
