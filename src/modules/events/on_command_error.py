@@ -13,6 +13,21 @@ from resources.helper_bot import instance as bot
 async def on_command_error(ctx: Context, error: CommandError):
     match error:
         case CommandNotFound():
+            name = ctx.invoked_with
+            if not name:
+                return
+
+            custom_text = ctx.message.content.split(name, maxsplit=1)[1]
+            match_command = await bot.db.get_tag(name)
+
+            if match_command:
+                await ctx.message.delete()
+
+                await ctx.send(
+                    f"{custom_text} {match_command['content']}",
+                    reference=ctx.message.reference,
+                )
+
             return
 
         case CheckFailure():
