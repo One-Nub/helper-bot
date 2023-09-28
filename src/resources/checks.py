@@ -14,3 +14,8 @@ async def is_staff(ctx: (Context | Interaction)) -> bool:
     admin_roles = set(ADMIN_ROLES.values())
 
     return len(roles.intersection(admin_roles)) != 0
+async def is_dev(ctx: (Context | Interaction)) -> bool:
+    author = ctx.author if isinstance(ctx, Context) else ctx.user
+    if author.id in WHITELISTED_USERS:
+        return True
+    return False

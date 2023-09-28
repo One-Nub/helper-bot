@@ -7,7 +7,7 @@ from resources.checks import is_staff
 from resources.helper_bot import instance as bot
 from googletrans import Translator
 
-@bot.command("translate", description="Translate text to different languages.")
+@bot.command("translate", description="Translate text to different languages.", aliases=["tr"])
 @check(is_staff)
 async def translate(ctx: Context, *, translate_string: str = "0"):
     """Translate provided text to another language."""

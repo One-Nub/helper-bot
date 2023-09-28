@@ -6,7 +6,7 @@ from discord import ui
 from discord.ext.commands import Context, check
 
 from resources.checks import is_staff
-from resources.constants import UNICODE_LEFT, UNICODE_RIGHT
+from resources.constants import UNICODE_LEFT, UNICODE_RIGHT, BLURPLE
 from resources.helper_bot import instance as bot
 
 MAX_TAGS_PER_PAGE = 20
@@ -35,6 +35,11 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
                 await ctx.send(f"{message} {tag['content']}", allowed_mentions = allowed_mentions)
         else:
                 await ctx.send(tag['content'], allowed_mentions = allowed_mentions)
+        await bot.db.update_tag(
+                tag['_id'],
+                tag['content'],
+                use_count=tag['use_count'] + 1,
+            )
     ## send the error message
     except Exception as Error:
         await ctx.send(
@@ -137,7 +142,38 @@ async def delete_tag(ctx: Context, name: str = "0"):
     except Exception as Error:
         await ctx.send(Error)
 
+@tag_base.command("info", description="Information about a tag.")
+@check(is_staff)
+async def tag_info(ctx: Context, name: str = "0"):
+    try:
+        ## if name is empty, raise error
+        if name == "0":
+            raise Exception("You forgot the tag name!")
 
+        ## delete the tag
+        tag = await bot.db.get_tag(name)
+        if tag is None:
+            raise Exception(f'The tag "{name}" was not found!')
+        else:
+            tag_content = tag['content']
+            tag_author = tag['author']
+            tag_use_count = tag['use_count']
+            tag_created_at = tag['created_at']
+            embed = discord.Embed(
+                title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {name}",
+                description=f'**Content:** \n```{tag_content}```',
+                color = BLURPLE)
+            embed.add_field(name="Author", value=f"<@{tag_author}> ({tag_author})", inline=True)
+            embed.add_field(name="Use Count", value=tag_use_count, inline=True)
+            embed.add_field(name="Created At", value=tag_created_at, inline=True)  
+            if len(tag['aliases']) > 0:
+                embed.add_field(name="Aliases", value=tag['aliases'], inline=False)
+            embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+            embed.timestamp = datetime.now()
+            await ctx.reply(embed=embed, mention_author=False)  
+    ## send the error message
+    except Exception as Error:
+        await ctx.send(Error)
 @tag_base.command("all", description="View all the tags in the tag list.")
 async def view_tag(ctx: Context):
     # Get tags from the db, get their names, then sort alphabetically

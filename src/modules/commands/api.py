@@ -17,7 +17,7 @@ async def api(ctx: Context, lookup_id: int = 0):
     guild = 372036754078826496
     try:
         if ctx.guild.id != guild:
-            raise Exception("This command can only be used in the Bloxlink HQ Server.")
+            raise Exception("This command can only be used in the Bloxlink HQ Server!")
         
         elif lookup_id == 0:
             raise Exception("Missing argument `id`. Please provide a valid Discord ID.")
