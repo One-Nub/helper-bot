@@ -160,12 +160,14 @@ async def tag_info(ctx: Context, name: str = "0"):
             tag_use_count = tag['use_count']
             tag_created_at = tag['created_at']
             embed = discord.Embed(
-                title=f"Tag Info: {name}",
-                description=f"**Content: \n```{tag_content}```",
+                title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {name}",
+                description=f'**Content:** \n```{tag_content}```',
                 color = BLURPLE)
             embed.add_field(name="Author", value=f"<@{tag_author}> ({tag_author})", inline=True)
             embed.add_field(name="Use Count", value=tag_use_count, inline=True)
             embed.add_field(name="Created At", value=tag_created_at, inline=True)  
+            if len(tag['aliases']) > 0:
+                embed.add_field(name="Aliases", value=tag['aliases'], inline=False)
             embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
             embed.timestamp = datetime.now()
             await ctx.reply(embed=embed, mention_author=False)  
