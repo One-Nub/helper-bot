@@ -25,6 +25,7 @@ async def reset_tag(ctx: Context, tag_name: str = "0"):
                 tag['content'],
                 use_count=0,
                 )
+            await ctx.reply(f"Reset tag count for `{tag_name}` successfully!", mention_author=False)
              
     except Exception as Error:
         embed_var = discord.Embed(
