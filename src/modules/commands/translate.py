@@ -5,7 +5,6 @@ from discord.ext.commands import Context, check
 from resources.constants import BLURPLE, RED
 from resources.checks import is_staff
 from resources.helper_bot import instance as bot
-from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
 from googletrans import Translator
 
 @bot.command("translate", description="Translate text to different languages.")
@@ -38,7 +37,3 @@ async def translate(ctx: Context, *, translate_string: str = "0"):
         embed_var.timestamp = datetime.now()
 
         await ctx.reply(embed=embed_var)
-
-
-# x = requests.GET("https://api.blox.link/v1/user/" + lookup_id)
-# await ctx.reply("Pong! - " + str(latency) + "ms")
