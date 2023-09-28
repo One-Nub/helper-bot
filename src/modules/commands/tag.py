@@ -28,15 +28,12 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
 
         allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False)
 
-        if message == "0":
-            message = ""
-
-        msg = await ctx.send(
-            f"{message} {tag['content']}",
-            allowed_mentions=allowed_mentions,
-            reference=ctx.message.reference,
-        )
-
+        if(message != "0" and ctx.interaction == None):
+                msg = await ctx.send(tag['content'], allowed_mentions = allowed_mentions)
+                await msg.edit(content=f"{message} {tag['content']}", allowed_mentions = allowed_mentions)
+        elif(message != "0" and ctx.interaction != None):
+                await ctx.send(f"{message} {tag['content']}", allowed_mentions = allowed_mentions)
+    
     ## send the error message
     except Exception as Error:
         await ctx.send(
