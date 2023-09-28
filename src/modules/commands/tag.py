@@ -33,7 +33,8 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
                 await msg.edit(content=f"{message} {tag['content']}", allowed_mentions = allowed_mentions)
         elif(message != "0" and ctx.interaction != None):
                 await ctx.send(f"{message} {tag['content']}", allowed_mentions = allowed_mentions)
-    
+        else:
+                await ctx.send(tag['content'], allowed_mentions = allowed_mentions)
     ## send the error message
     except Exception as Error:
         await ctx.send(
