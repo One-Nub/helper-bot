@@ -35,6 +35,11 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
                 await ctx.send(f"{message} {tag['content']}", allowed_mentions = allowed_mentions)
         else:
                 await ctx.send(tag['content'], allowed_mentions = allowed_mentions)
+        await bot.db.update_tag(
+                tag['_id'],
+                tag['content'],
+                use_count=tag['use_count'] + 1,
+            )
     ## send the error message
     except Exception as Error:
         await ctx.send(
