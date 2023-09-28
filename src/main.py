@@ -1,10 +1,15 @@
 import logging
 import os
+import time
 
 from discord import AllowedMentions, Intents, utils
 
 from resources.helper_bot import HelperBot
 from resources.secrets import BOT_TOKEN, MONGO_URL  # pylint: disable=E0611
+
+print("Sleeping for 10 seconds")
+time.sleep(10)
+print("Continuing with setup")
 
 utils.setup_logging(level=logging.INFO)
 
