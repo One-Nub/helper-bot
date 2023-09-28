@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import discord
-import requests
 from discord.ext.commands import Context, check
 
 from resources.constants import BLURPLE, RED
