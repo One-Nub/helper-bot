@@ -116,6 +116,7 @@ class MongoDB:
         return await cursor.to_list(None)
 
     async def get_tag(self, name: str):
+        name = name.lower()
         query = {
             "$or": [
                 {"_id": name},
@@ -151,11 +152,13 @@ class MongoDB:
             created_at (datetime, optional): Date the command was created at. Defaults to None.
             updated_at (datetime, optional): Date the command was last updated at. Defaults to None.
         """
+        name = name.lower()
         data = {
             "content": content,
         }
 
         if aliases:
+            aliases = [x.lower() for x in aliases]
             data["aliases"] = aliases
 
         if use_count is not None:
@@ -189,6 +192,7 @@ class MongoDB:
         Args:
             name (str): The name or alias of the tag.
         """
+        name = name.lower()
         query = {
             "$or": [
                 {"_id": name},
