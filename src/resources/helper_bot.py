@@ -270,7 +270,7 @@ class MongoDB:
         Returns:
             list: List of the Staff activity, each tag is a dictionary.
         """
-        cursor = self.db["metrics"].find()
+        cursor = self.db["metrics"].find({"staff_pos": "Staff"})
         return await cursor.to_list(None)
 
     async def get_all_trial_metrics(self) -> list:
