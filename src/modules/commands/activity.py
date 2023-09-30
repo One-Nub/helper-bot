@@ -5,8 +5,8 @@ import discord
 from discord import ui
 from discord.ext.commands import Context, check
 
-from resources.checks import is_cm
-from resources.constants import BLURPLE, RED, UNICODE_LEFT, UNICODE_RIGHT
+from resources.checks import is_cm, is_hr
+from resources.constants import BLURPLE, RED
 from resources.helper_bot import instance as bot
 
 MAX_USERS_PER_PAGE = 10
@@ -31,7 +31,7 @@ async def activity_base(ctx: Context):
 
 
 @activity_base.command("trials", description="View activity for trials.")
-@check(is_cm)
+@check(is_hr)
 async def trials(ctx: Context):
     """Activity of all Trial members."""
     # Get activity from the db, get their msg_count, then sort by highest to lowest
@@ -69,6 +69,7 @@ async def activity_view(ctx: Context, staff_id: int = 0):
             success_embed.description = f"Below is the activity log for <@{staff_id}>."
             success_embed.color = BLURPLE
             success_embed.add_field(name="Message Count (last 30 days)", value=data["msg_count"])
+            success_embed.add_field(name="Last Message Sent", value=data["updated_at"])
             success_embed.timestamp = datetime.now()
             success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
 
