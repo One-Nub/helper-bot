@@ -11,6 +11,7 @@ googletrans-py==4.0.0
 idna==3.4
 motor[srv]==3.3.1
 multidict==6.0.4
+psutil==5.9.5
 pymongo==4.5.0
 pymongo[srv]==4.5.0
 requests==2.31.0
