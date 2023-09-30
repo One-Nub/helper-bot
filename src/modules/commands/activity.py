@@ -60,7 +60,7 @@ async def activity_view(ctx: Context, staff_id):
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
 
         else:
-            data = await bot.db.get_staff_metrics(staff_id)
+            data = await bot.db.get_staff_metrics(int(staff_id))
             if data is None:
                 raise Exception("There is no data for this user.")
 
