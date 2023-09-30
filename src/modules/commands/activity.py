@@ -27,7 +27,7 @@ async def activity_base(ctx: Context):
         description=description,
         color=BLURPLE,
     )
-    await ctx.reply(embed=embed)
+    await ctx.reply(embed=embed, mention_author=False, ephemeral=True)
 
 
 @activity_base.command("trials", description="View activity for trials.")
