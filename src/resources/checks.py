@@ -33,5 +33,5 @@ async def is_cm(ctx: (Context | Interaction)) -> bool:
 async def is_hr(ctx: (Context | Interaction)) -> bool:
     author = ctx.author if isinstance(ctx, Context) else ctx.user
     roles = set([role.id for role in author.roles])
-    admin_roles = HUMAN_RESOURCES_ROLE or set(CM.values())
-    return len(roles.intersection(admin_roles)) != 0
+    admin_roles = set(CM.values())
+    return len(roles.intersection(admin_roles)) != 0 or HUMAN_RESOURCES_ROLE in roles
