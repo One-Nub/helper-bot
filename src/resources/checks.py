@@ -1,7 +1,7 @@
 from discord import Interaction
 from discord.ext.commands import Context
 
-from resources.constants import ADMIN_ROLES, WHITELISTED_USERS
+from resources.constants import ADMIN_ROLES, WHITELISTED_USERS, CM
 
 
 async def is_staff(ctx: (Context | Interaction)) -> bool:
@@ -19,3 +19,9 @@ async def is_dev(ctx: (Context | Interaction)) -> bool:
     if author.id in WHITELISTED_USERS:
         return True
     return False
+async def is_cm(ctx: (Context | Interaction)) -> bool:
+    author = ctx.author if isinstance(ctx, Context) else ctx.user
+    roles = set([role.id for role in author.roles])
+    admin_roles = set(CM.values())
+
+    return len(roles.intersection(admin_roles)) != 0
