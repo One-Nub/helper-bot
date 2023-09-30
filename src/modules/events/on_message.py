@@ -7,8 +7,6 @@ async def on_message(message):
         roles = set([role.id for role in message.author.roles])
         admin_roles = set(ADMIN_ROLES.values())
     if len(roles.intersection(admin_roles)) == 0:
-        return
-    else:
         try:
             data = await bot.db.get_staff_metrics(message.author.id)
             if data is None:
