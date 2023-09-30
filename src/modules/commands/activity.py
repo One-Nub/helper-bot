@@ -50,7 +50,7 @@ async def trials(ctx: Context):
 
 @activity_base.command("view", description="View activity for specific user.")
 @check(is_cm)
-async def activity_view(ctx: Context, staff_id: int = 0):
+async def activity_view(ctx: Context, staff_id):
     """Fetch information about activity from a certain user."""
     try:
         if staff_id == 0:
