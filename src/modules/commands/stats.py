@@ -29,7 +29,7 @@ async def stats(ctx: commands.Context):
     hr = f"{hr} hours" if hr != "0" else None
 
     mins = uptime_split[1]
-    mins = f"{mins} hours" if mins != "00" else ""
+    mins = f"{mins} minutes" if mins != "00" else ""
 
     sec = f"{uptime_split[2][:2]} seconds"
 
