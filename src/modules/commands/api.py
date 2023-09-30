@@ -4,8 +4,8 @@ import discord
 import requests
 from discord.ext.commands import Context, check
 
-from resources.constants import BLURPLE, RED
 from resources.checks import is_staff
+from resources.constants import BLURPLE, RED
 from resources.helper_bot import instance as bot
 from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
 
@@ -18,13 +18,13 @@ async def api(ctx: Context, lookup_id: int = 0):
     try:
         if ctx.guild.id != guild:
             raise Exception("This command can only be used in the Bloxlink HQ Server!")
-        
+
         elif lookup_id == 0:
             raise Exception("Missing argument `id`. Please provide a valid Discord ID.")
 
         elif len(str(lookup_id)) < 17:
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
-        
+
         else:
             string = f"https://api.blox.link/v4/public/guilds/{guild}/discord-to-roblox/{lookup_id}"
 

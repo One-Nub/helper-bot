@@ -1,6 +1,9 @@
-from resources.helper_bot import instance as bot
 from datetime import datetime
+
 from resources.constants import ADMIN_ROLES
+from resources.helper_bot import instance as bot
+
+
 @bot.event
 async def on_message(message):
     if not message.author.bot and message.channel.id == 372181186816245770:
@@ -17,12 +20,12 @@ async def on_message(message):
                     )
                 else:
                     await bot.db.update_staff_metric(
-                    message.author.id,
-                    data["msg_count"] + 1,
-                    datetime.now(),
-                )
+                        message.author.id,
+                        data["msg_count"] + 1,
+                        datetime.now(),
+                    )
             except Exception as e:
                 print(e)
     if message.author.bot:
-        return        
+        return
     await bot.process_commands(message)

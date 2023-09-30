@@ -1,11 +1,13 @@
 from datetime import datetime
+
 import discord
 from discord.ext.commands import Context, check
-
-from resources.constants import BLURPLE, RED
-from resources.checks import is_staff
-from resources.helper_bot import instance as bot
 from googletrans import Translator
+
+from resources.checks import is_staff
+from resources.constants import BLURPLE, RED
+from resources.helper_bot import instance as bot
+
 
 @bot.command("translate", description="Translate text to different languages.", aliases=["tr"])
 @check(is_staff)
@@ -13,8 +15,10 @@ async def translate(ctx: Context, *, translate_string: str = "0"):
     """Translate provided text to another language."""
     try:
         if translate_string == "0":
-            raise Exception("Missing argument `translate_string`. Please provide the string you would like to translate.")
-        
+            raise Exception(
+                "Missing argument `translate_string`. Please provide the string you would like to translate."
+            )
+
         else:
             translator = Translator()
             translation = translator.translate(translate_string, dest="en")

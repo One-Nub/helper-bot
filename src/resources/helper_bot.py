@@ -223,18 +223,20 @@ class MongoDB:
             update={"$set": data},
             upsert=True,
         )
-    async def update_staff_metric(self,
+
+    async def update_staff_metric(
+        self,
         staff_id: str,
         msg_count: int,
         updated_at: datetime = None,
     ):
         """Create a staff metric in the database
 
-         Args:
-            staff_id (str): The staff members user ID.
-            msg_count (int): Number of messages the staff member has sent.
-            tag_use_count (int, optional): Number of tags the staff member has used. Defaults to None.
-            updated_at (datetime, optional): Date of last message. Defaults to None.
+        Args:
+           staff_id (str): The staff members user ID.
+           msg_count (int): Number of messages the staff member has sent.
+           tag_use_count (int, optional): Number of tags the staff member has used. Defaults to None.
+           updated_at (datetime, optional): Date of last message. Defaults to None.
         """
         data = {
             "msg_count": msg_count,
@@ -254,6 +256,7 @@ class MongoDB:
             update={"$set": data, "$setOnInsert": {"_id": staff_id}},
             upsert=True,
         )
+
     async def get_staff_metrics(self, staff_id: str):
         """Get specific metrics for a staff user."""
         query = {
@@ -263,6 +266,7 @@ class MongoDB:
         }
         cursor = await self.db["metrics"].find_one(query)
         return cursor
+
     async def get_log_channels(self, guild_id: str):
         """Get all the log channels in a guild"""
         cursor = await self.db["config"].find_one({"_id": str(guild_id)})

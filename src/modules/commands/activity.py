@@ -3,9 +3,10 @@ from datetime import datetime
 import discord
 from discord.ext.commands import Context, check
 
-from resources.constants import BLURPLE, RED
 from resources.checks import is_cm
+from resources.constants import BLURPLE, RED
 from resources.helper_bot import instance as bot
+
 
 @bot.command("activity", description="Staff activity check.")
 @check(is_cm)
@@ -17,12 +18,12 @@ async def activity(ctx: Context, staff_id: int = 0):
 
         elif len(str(staff_id)) < 17:
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
-        
+
         else:
             data = await bot.db.get_staff_metrics(staff_id)
             if data is None:
                 raise Exception("There is no data for this user.")
-            
+
             success_embed = discord.Embed()
             success_embed.title = "Activity Log"
             success_embed.description = f"Below is the activity log for <@{staff_id}>."
