@@ -1,3 +1,5 @@
+import traceback
+
 from discord.ext.commands import (
     CheckFailure,
     CommandError,
@@ -26,6 +28,12 @@ async def on_command_error(ctx: Context, error: CommandError):
                 await ctx.send(
                     f"{custom_text} {match_command['content']}",
                     reference=ctx.message.reference,
+                )
+
+                await bot.db.update_tag(
+                    name,
+                    match_command["content"],
+                    use_count=match_command["use_count"] + 1,
                 )
 
             return
@@ -59,5 +67,11 @@ async def on_command_error(ctx: Context, error: CommandError):
             if not ctx.interaction:
                 await ctx.message.delete()
 
-        case _:
-            raise error
+        case _ as err:
+            output = f"{err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+            await ctx.reply(
+                content=output,
+                mention_author=False,
+                ephemeral=True,
+            )
+            raise err
