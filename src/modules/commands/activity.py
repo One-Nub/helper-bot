@@ -20,8 +20,12 @@ async def activity_base(ctx: Context):
     activity_list = await bot.db.get_all_staff_metrics()
     activity_list.sort(key=lambda x: x["msg_count"], reverse=True)
     description = ""
+    username = ""
     for i, tag in enumerate(activity_list):
-        description += f"{i+1}. <@{tag['_id']}> - {tag['msg_count']} message(s)\n"
+        user = await bot.fetch_user(tag["_id"])
+        if user is not None:
+            username = user.name
+        description += f"{i+1}. <@{tag['_id']}> ({username}) - {tag['msg_count']} message(s)\n"
     embed = discord.Embed(
         title="Activity Leaderboard",
         description=description,
@@ -38,8 +42,14 @@ async def trials(ctx: Context):
     activity_list = await bot.db.get_all_trial_metrics()
     activity_list.sort(key=lambda x: x["msg_count"], reverse=True)
     description = ""
+    username = ""
     for i, tag in enumerate(activity_list):
-        description += f"{i+1}. <@{tag['_id']}> - {tag['msg_count']} message(s)\n"
+        user = await bot.fetch_user(tag["_id"])
+        if user is not None:
+            username = user.name
+        else:
+            username = ""
+        description += f"{i+1}. <@{tag['_id']}> ({username}) - {tag['msg_count']} message(s)\n"
     embed = discord.Embed(
         title="Activity Leaderboard [Trial Staff]",
         description=description,
