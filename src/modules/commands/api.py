@@ -26,7 +26,7 @@ async def api(ctx: Context, lookup_id: int = 0):
             raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
 
         else:
-            string = f"https://api.blox.link/v4/public/guilds/{guild}/discord-to-roblox/{lookup_id}"
+            string = f"https://api.blox.link/v4/public/discord-to-roblox/{lookup_id}"
 
             x = requests.get(string, headers={"Authorization": BLOXLINK_API_KEY}, timeout=5)
             response = x.json()

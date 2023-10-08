@@ -226,20 +226,22 @@ class MongoDB:
 
     async def update_staff_metric(
         self,
-        staff_id: str,
+        staff_id: int,
         msg_count: int,
+        staff_pos: str,
         updated_at: datetime = None,
     ):
         """Create a staff metric in the database
 
         Args:
-           staff_id (str): The staff members user ID.
+           staff_id (int): The staff members user ID.
            msg_count (int): Number of messages the staff member has sent.
-           tag_use_count (int, optional): Number of tags the staff member has used. Defaults to None.
+           staff_pos (str): The Staff members position.
            updated_at (datetime, optional): Date of last message. Defaults to None.
         """
         data = {
             "msg_count": msg_count,
+            "staff_pos": staff_pos,
         }
 
         if updated_at is not None:
@@ -257,15 +259,28 @@ class MongoDB:
             upsert=True,
         )
 
-    async def get_staff_metrics(self, staff_id: str):
+    async def get_staff_metrics(self, staff_id):
         """Get specific metrics for a staff user."""
-        query = {
-            "$or": [
-                {"_id": staff_id},
-            ],
-        }
-        cursor = await self.db["metrics"].find_one(query)
+        cursor = await self.db["metrics"].find_one({"_id": staff_id})
         return cursor
+
+    async def get_all_staff_metrics(self) -> list:
+        """Return a list of all the Staff metrics in the database.
+
+        Returns:
+            list: List of the Staff activity, each tag is a dictionary.
+        """
+        cursor = self.db["metrics"].find({"staff_pos": "Staff"})
+        return await cursor.to_list(None)
+
+    async def get_all_trial_metrics(self) -> list:
+        """Return a list of all the Trial metrics in the database.
+
+        Returns:
+            list: List of the Trial activity, each tag is a dictionary.
+        """
+        cursor = self.db["metrics"].find({"staff_pos": "Trial"})
+        return await cursor.to_list(None)
 
     async def get_log_channels(self, guild_id: str):
         """Get all the log channels in a guild"""
