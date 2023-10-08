@@ -28,13 +28,27 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
 
         allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False)
 
-        if message != "0" and ctx.interaction == None:
-            msg = await ctx.send(tag["content"], allowed_mentions=allowed_mentions)
-            await msg.edit(content=f"{message} {tag['content']}", allowed_mentions=allowed_mentions)
-        elif message != "0" and ctx.interaction != None:
+        if message != "0" and ctx.interaction is None:
+            msg = await ctx.send(
+                tag["content"],
+                allowed_mentions=allowed_mentions,
+                reference=ctx.message.reference,
+            )
+            await msg.edit(
+                content=f"{message} {tag['content']}",
+                allowed_mentions=allowed_mentions,
+            )
+
+        elif message != "0" and ctx.interaction is not None:
             await ctx.send(f"{message} {tag['content']}", allowed_mentions=allowed_mentions)
+
         else:
-            await ctx.send(tag["content"], allowed_mentions=allowed_mentions)
+            await ctx.send(
+                tag["content"],
+                allowed_mentions=allowed_mentions,
+                reference=ctx.message.reference,
+            )
+
         await bot.db.update_tag(
             tag["_id"],
             tag["content"],
@@ -51,7 +65,7 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
             ephemeral=True,
         )
 
-        if ctx.interaction == None:
+        if ctx.interaction is None:
             await ctx.message.delete()
 
 
@@ -68,7 +82,7 @@ async def add_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â…
 
         else:
             check_tag = await bot.db.get_tag(tag_name)
-            if check_tag != None:
+            if check_tag is not None:
                 raise Exception("Tag already exists.")
 
             tag_content = "\n".join(tag_content.split("\\n"))
@@ -104,7 +118,7 @@ async def edit_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â
 
         else:
             check_tag = await bot.db.get_tag(tag_name)
-            if check_tag == None:
+            if check_tag is None:
                 raise Exception("Tag does not exist. Please create the tag with `tag add` instead.")
 
             tag_content = "\n".join(tag_content.split("\\n"))
@@ -133,7 +147,7 @@ async def delete_tag(ctx: Context, name: str = "0"):
             raise Exception("You forgot the tag name!")
 
         ## delete the tag
-        if await bot.db.get_tag(name) != None:
+        if await bot.db.get_tag(name) is not None:
             await bot.db.delete_tag(name)
             await ctx.send("Tag has been deleted.")
         ## if no tag found, raise error
