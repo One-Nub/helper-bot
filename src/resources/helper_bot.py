@@ -229,6 +229,7 @@ class MongoDB:
         staff_id: int,
         msg_count: int,
         staff_pos: str,
+        tag_count: int = 0,
         updated_at: datetime = None,
     ):
         """Create a staff metric in the database
@@ -237,6 +238,7 @@ class MongoDB:
            staff_id (int): The staff members user ID.
            msg_count (int): Number of messages the staff member has sent.
            staff_pos (str): The Staff members position.
+           tag_count (int, optional): Numer of tags the staff member has used.
            updated_at (datetime, optional): Date of last message. Defaults to None.
         """
         data = {
@@ -246,7 +248,8 @@ class MongoDB:
 
         if updated_at is not None:
             data["updated_at"] = updated_at.isoformat()
-
+        if tag_count is not None:
+            data["tag_count"] = tag_count
         filter_query = {
             "$or": [
                 {"_id": staff_id},
