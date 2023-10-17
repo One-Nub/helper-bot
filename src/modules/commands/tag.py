@@ -5,7 +5,7 @@ import discord
 from discord import ui
 from discord.ext.commands import Context, check
 
-from resources.checks import is_staff
+from resources.checks import is_staff, is_staff_or_trial
 from resources.constants import BLURPLE, UNICODE_LEFT, UNICODE_RIGHT
 from resources.helper_bot import instance as bot
 
@@ -160,7 +160,7 @@ async def delete_tag(ctx: Context, name: str = "0"):
 
 
 @tag_base.command("info", description="Information about a tag.")
-@check(is_staff)
+@check(is_staff_or_trial)
 async def tag_info(ctx: Context, name: str = "0"):
     try:
         ## if name is empty, raise error
