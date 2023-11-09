@@ -41,7 +41,15 @@ async def api(ctx: Context, lookup_id: int = 0):
             success_embed.timestamp = datetime.now()
             success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
 
-            await ctx.reply(embed=success_embed, mention_author=False)
+            view = discord.ui.View()
+            view.add_item(
+                discord.ui.Button(
+                    label="Roblox Profile",
+                    url=f"https://roblox.com/users/{response.get('robloxID', 0)}/profile",
+                )
+            )
+
+            await ctx.reply(embed=success_embed, mention_author=False, view=view)
     except Exception as Error:
         embed_var = discord.Embed(
             title="<:BloxlinkDead:823633973967716363> Error",
