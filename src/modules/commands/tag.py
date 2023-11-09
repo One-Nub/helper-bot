@@ -2,8 +2,9 @@ import math
 from datetime import datetime, timedelta
 
 import discord
-from discord import ui
+from discord import app_commands, ui
 from discord.ext.commands import Context, check
+from textdistance import Sorensen
 
 from resources.checks import is_staff, is_staff_or_trial
 from resources.constants import BLURPLE, UNICODE_LEFT, UNICODE_RIGHT
@@ -12,7 +13,24 @@ from resources.helper_bot import instance as bot
 MAX_TAGS_PER_PAGE = 20
 
 
+async def tag_name_autocomplete(interaction: discord.Interaction, user_input: str):
+    tags = await bot.db.get_all_tags()
+    valid_names = []
+    for tag in tags:
+        valid_names.append(tag["_id"])
+        valid_names.extend(tag.get("aliases", []))
+
+    if user_input == "":
+        return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+    valid_names = [
+        item for item in valid_names if Sorensen().similarity(user_input, item) > 0.65 or user_input in item
+    ]
+    return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
+@app_commands.autocomplete(name=tag_name_autocomplete)
 async def tag_base(ctx: Context, name: str, *, message: str = "0"):
     try:
         ## if name is empty, raise error
@@ -106,6 +124,7 @@ async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
 
 
 @tag_base.command("edit", description="Edit a current tag in the list.")
+@app_commands.autocomplete(tag_name=tag_name_autocomplete)
 @check(is_staff)
 async def edit_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
@@ -139,6 +158,7 @@ async def edit_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "�
 
 
 @tag_base.command("delete", description="Remove a tag from the tag list.")
+@app_commands.autocomplete(name=tag_name_autocomplete)
 @check(is_staff)
 async def delete_tag(ctx: Context, name: str = "0"):
     try:
@@ -160,6 +180,7 @@ async def delete_tag(ctx: Context, name: str = "0"):
 
 
 @tag_base.command("info", description="Information about a tag.")
+@app_commands.autocomplete(name=tag_name_autocomplete)
 @check(is_staff_or_trial)
 async def tag_info(ctx: Context, name: str = "0"):
     try:
