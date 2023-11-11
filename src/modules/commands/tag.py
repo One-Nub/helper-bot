@@ -87,7 +87,7 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
             await ctx.message.delete()
 
 
-@tag_base.command("add", description="Add a tag to the tag list.")
+@tag_base.command("add", description="Add a tag to the tag list.", aliases=["create"])
 @check(is_staff)
 async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
     try:
