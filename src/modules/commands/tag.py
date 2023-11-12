@@ -205,11 +205,15 @@ async def tag_info(ctx: Context, name: str = "0"):
             embed.add_field(name="Author", value=f"<@{tag_author}> ({tag_author})", inline=True)
             embed.add_field(name="Use Count", value=tag_use_count, inline=True)
             embed.add_field(name="Created At", value=tag_created_at, inline=True)
-            if len(tag["aliases"]) > 0:
-                embed.add_field(name="Aliases", value=", ".join(tag["aliases"]), inline=False)
+
+            aliases = tag.get("aliases", [])
+            if len(aliases) > 0:
+                embed.add_field(name="Aliases", value=", ".join(aliases), inline=False)
+
             embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
             embed.timestamp = datetime.now()
             await ctx.reply(embed=embed, mention_author=False)
+
     ## send the error message
     except Exception as Error:
         await ctx.send(Error)
