@@ -115,7 +115,15 @@ class MongoDB:
         cursor = self.db["tags"].find()
         return await cursor.to_list(None)
 
-    async def get_tag(self, name: str):
+    async def get_tag(self, name: str) -> dict | None:
+        """Get a single tag from the database
+
+        Args:
+            name (str): The name or alias of the tag to find.
+
+        Returns:
+            dict | None: The tag data if it exists, otherwise None.
+        """
         name = name.lower()
         query = {
             "$or": [
