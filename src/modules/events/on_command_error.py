@@ -1,18 +1,16 @@
 import traceback
 
-from discord.ext.commands import (
-    CheckFailure,
-    CommandError,
-    CommandNotFound,
-    Context,
-    MissingRequiredArgument,
-)
+from discord.ext.commands import CheckFailure, CommandError, CommandNotFound, Context, MissingRequiredArgument
 
 from resources.helper_bot import instance as bot
 
 
 @bot.event
 async def on_command_error(ctx: Context, error: CommandError):
+    if ctx.command is not None and ctx.command.has_error_handler():
+        # Ignore commands that have their own error handlers.
+        return
+
     match error:
         case CommandNotFound():
             name = ctx.invoked_with
