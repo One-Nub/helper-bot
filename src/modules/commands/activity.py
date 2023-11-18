@@ -13,6 +13,7 @@ MAX_USERS_PER_PAGE = 10
 
 
 @bot.hybrid_group("activity", description="Send (staff) activity leaderboard to this channel!", fallback="lb")
+@discord.app_commands.guild_only()
 @check(is_cm)
 async def activity_base(ctx: Context):
     """Activity of all Staff members."""

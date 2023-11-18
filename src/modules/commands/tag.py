@@ -30,6 +30,7 @@ async def tag_name_autocomplete(interaction: discord.Interaction, user_input: st
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
+@app_commands.guild_only()
 @app_commands.autocomplete(name=tag_name_autocomplete)
 async def tag_base(ctx: Context, name: str, *, message: str = "0"):
     try:
