@@ -199,7 +199,7 @@ async def tag_info(ctx: Context, name: str = "0"):
             tag_use_count = tag["use_count"]
             tag_created_at = tag["created_at"]
             embed = discord.Embed(
-                title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {name}",
+                title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {tag['_id']}",
                 description=f"**Content:** \n```{tag_content}```",
                 color=BLURPLE,
             )
