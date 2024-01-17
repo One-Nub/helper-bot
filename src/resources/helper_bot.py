@@ -54,6 +54,10 @@ class HelperBot(commands.Bot):
             logging.error("NO MONGODB URL WAS FOUND.")
         instance = self
 
+    async def setup_hook(self):
+        # im lazy
+        await self.load_extension("modules.commands.linear")
+
     @property
     def uptime(self) -> timedelta:
         """The current uptime of the bot as a timedelta."""
