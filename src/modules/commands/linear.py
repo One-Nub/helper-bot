@@ -81,6 +81,12 @@ class Linear(commands.GroupCog, group_name="linear"):
             content=f"Issue [{created_issue.identifier}]({created_issue.url}) created.", embed=embed
         )
 
+    async def cog_app_command_error(self, interaction: discord.Interaction, error):
+        if not interaction.response.is_done:
+            await interaction.response.send_message(content=error, ephemeral=True)
+        else:
+            await interaction.followup.send(content=error, ephemeral=True)
+
 
 async def setup(bot: HelperBot):
     await bot.add_cog(Linear(bot))
