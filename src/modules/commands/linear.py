@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from resources.checks import is_staff
+from resources.constants import DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
 from resources.helper_bot import HelperBot
 
 
@@ -21,6 +22,7 @@ class Linear(commands.GroupCog, group_name="linear"):
         description="Long description of the issue",
         team="The team this issue is for",
     )
+    @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
     async def issue(
         self,
         ctx: commands.Context,
