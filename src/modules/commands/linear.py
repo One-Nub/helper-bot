@@ -4,6 +4,7 @@ from typing import Literal
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.ext.commands import CheckFailure
 
 from resources.checks import is_staff
 from resources.constants import BLURPLE, DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
@@ -18,12 +19,12 @@ class Linear(commands.GroupCog, group_name="linear"):
         super().__init__()
 
     @app_commands.command(name="issue")
-    @app_commands.check(is_staff)
     @app_commands.describe(
         title="Short description of the issue",
         description="Long description of the issue",
         team="The team this issue is for",
     )
+    @app_commands.check(is_staff)
     @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
     async def issue(
         self,
@@ -81,8 +82,35 @@ class Linear(commands.GroupCog, group_name="linear"):
             content=f"Issue [{created_issue.identifier}]({created_issue.url}) created.", embed=embed
         )
 
+    async def search_autocomplete(self, interaction: discord.Interaction, user_input: str):
+        if not user_input:
+            await interaction.response.autocomplete([])
+            return
+
+        linear: LinearAPI = LinearAPI.connect()
+        issues = await linear.get_issues(query_filter=user_input)
+
+        choices = [
+            app_commands.Choice(name=f"{issue.identifier} - {issue.title}", value=issue.id)
+            for issue in issues[:25]
+        ]
+
+        await interaction.response.autocomplete(choices)
+
+    @app_commands.command(name="search")
+    @app_commands.describe(query="What are you searching for?")
+    @app_commands.autocomplete(query=search_autocomplete)
+    @app_commands.check(is_staff)
+    @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
+    async def search(self, ctx: discord.Interaction, query: str):
+        pass
+
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
-        if not interaction.response.is_done:
+        match error:
+            case CheckFailure():
+                error = "You are not allowed to use this command!"
+
+        if not interaction.response.is_done():
             await interaction.response.send_message(content=error, ephemeral=True)
         else:
             await interaction.followup.send(content=error, ephemeral=True)
