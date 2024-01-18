@@ -118,7 +118,7 @@ class LinearAPI:
             return None
 
         created_issue = resp_json["data"]["issueCreate"]["issue"]
-        return LinearIssue.parse_extras(**created_issue)
+        return LinearIssue.parse_extras(created_issue)
 
     async def get_issues(self, query_filter: str = None) -> list[LinearIssue]:
         """Get all issues that optionally match a filter string."""
@@ -183,4 +183,4 @@ class LinearAPI:
             matching_nodes.extend(nodes)
             has_next_page = page_info.get("hasNextPage", False)
 
-        return [LinearIssue.parse_extras(**issue) for issue in matching_nodes]
+        return [LinearIssue.parse_extras(issue) for issue in matching_nodes]
