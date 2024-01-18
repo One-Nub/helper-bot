@@ -9,6 +9,11 @@ LINEAR_URL = "https://api.linear.app/graphql"
 logger = logging.getLogger("LINEAR_GQL")
 
 
+class LinearError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 @define
 class LinearTeam:
     id: str
@@ -45,13 +50,19 @@ class LinearAPI:
 
         return cls(token)
 
-    async def get_teams(self):
+    async def get_teams(self) -> list[LinearTeam]:
         """Get Linear teams, necessary for issue creation."""
         req = await self.session.get(LINEAR_URL, params={"query": "{teams{nodes{id,name,key}}}"})
 
-        return await req.json()
+        resp_json = await req.json()
+        if resp_json.get("errors", []):
+            logger.error(resp_json)
+            raise LinearError()
 
-    async def create_issue(self, team_id: str, title: str, description: str = None):
+        team_nodes = resp_json["data"]["teams"]["nodes"]
+        return [LinearTeam(**team) for team in team_nodes]
+
+    async def create_issue(self, team_id: str, title: str, description: str = None) -> LinearIssue | None:
         """Create an issue in the triage panel"""
         variables = {
             "input": {
@@ -76,9 +87,18 @@ class LinearAPI:
 
         req = await self.session.post(LINEAR_URL, json={"query": query, "variables": variables})
 
-        return await req.json()
+        resp_json = await req.json()
+        if resp_json.get("errors", []):
+            logger.error(resp_json)
+            raise LinearError()
 
-    async def get_issues(self, query_filter: str = None) -> list[dict]:
+        if not resp_json["data"]["issueCreate"]["success"]:
+            return None
+
+        created_issue = resp_json["data"]["issueCreate"]["issue"]
+        return LinearIssue(**created_issue)
+
+    async def get_issues(self, query_filter: str = None) -> list[LinearIssue]:
         """Get all issues that optionally match a filter string."""
         variables: dict = {
             "filter": {
@@ -121,7 +141,7 @@ class LinearAPI:
             resp_json = await req.json()
             if resp_json.get("errors", []):
                 logger.error(resp_json)
-                raise InterruptedError()
+                raise LinearError()
 
             page_info = resp_json["data"]["issues"]["pageInfo"]
             nodes = resp_json["data"]["issues"]["nodes"]
@@ -141,4 +161,4 @@ class LinearAPI:
             matching_nodes.extend(nodes)
             has_next_page = page_info.get("hasNextPage", False)
 
-        return matching_nodes
+        return [LinearIssue(**issue) for issue in matching_nodes]
