@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 import discord
@@ -32,6 +33,8 @@ class Linear(commands.GroupCog, group_name="linear"):
         team: Literal["bot", "website"],
     ):
         """Log an issue for the Bloxlink developers! Staff only."""
+        await ctx.response.defer()
+
         linear: LinearAPI = LinearAPI.connect()
         teams = await linear.get_teams()
 
@@ -42,7 +45,7 @@ class Linear(commands.GroupCog, group_name="linear"):
                 break
 
         if not chosen_team:
-            await ctx.response.send_message(
+            await ctx.followup.send(
                 "Could not find the team you are creating an issue for! :cry:",
                 ephemeral=True,
                 mention_author=False,
@@ -51,10 +54,12 @@ class Linear(commands.GroupCog, group_name="linear"):
 
         description = "\n".join(description.split("\\n"))
         description += f"\n\n> *Created by {ctx.user.name} ({ctx.user.id}) on Discord.*"
-        created_issue = await linear.create_issue(chosen_team.id, title=title, description=description)
+        created_issue: LinearIssue = await linear.create_issue(
+            chosen_team.id, title=title, description=description
+        )
 
         if not created_issue:
-            await ctx.response.send_message(
+            await ctx.followup.send(
                 "There was a problem when creating your issue! :pensive:",
                 ephemeral=True,
                 mention_author=False,
@@ -66,8 +71,13 @@ class Linear(commands.GroupCog, group_name="linear"):
         embed.url = created_issue.url
         embed.description = description
         embed.color = BLURPLE
+        embed.set_footer(icon_url=ctx.user.avatar.url, text=chosen_team.name)
+        embed.timestamp = datetime.utcnow()
 
-        await ctx.response.send_message(
+        if created_issue.state:
+            embed.add_field(name="Status", value=created_issue.state.name)
+
+        await ctx.followup.send(
             content=f"Issue [{created_issue.identifier}]({created_issue.url}) created.", embed=embed
         )
 
