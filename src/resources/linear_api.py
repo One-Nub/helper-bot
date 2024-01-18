@@ -15,6 +15,11 @@ class LinearError(Exception):
 
 
 @define
+class IssueState:
+    name: str
+
+
+@define
 class LinearTeam:
     id: str
     name: str
@@ -33,6 +38,20 @@ class LinearIssue:
     description: str = None
 
     team: LinearTeam = None
+    state: IssueState = None
+
+    @classmethod
+    def parse_extras(cls, issue_data: dict):
+        team = None
+        state = None
+
+        if issue_data.get("team"):
+            team = LinearTeam(**issue_data.pop("team"))
+
+        if issue_data.get("state"):
+            state = IssueState(**issue_data.pop("state"))
+
+        return cls(**issue_data, team=team, state=state)
 
 
 class LinearAPI:
@@ -79,6 +98,9 @@ class LinearAPI:
                     url
                     description
                     title
+                    state {
+                        name
+                    }
                 }
                 success
             }
@@ -96,7 +118,7 @@ class LinearAPI:
             return None
 
         created_issue = resp_json["data"]["issueCreate"]["issue"]
-        return LinearIssue(**created_issue)
+        return LinearIssue.parse_extras(**created_issue)
 
     async def get_issues(self, query_filter: str = None) -> list[LinearIssue]:
         """Get all issues that optionally match a filter string."""
@@ -161,4 +183,4 @@ class LinearAPI:
             matching_nodes.extend(nodes)
             has_next_page = page_info.get("hasNextPage", False)
 
-        return [LinearIssue(**issue) for issue in matching_nodes]
+        return [LinearIssue.parse_extras(**issue) for issue in matching_nodes]
