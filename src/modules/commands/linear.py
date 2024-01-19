@@ -108,7 +108,23 @@ class Linear(commands.GroupCog, group_name="linear"):
     @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
     async def search(self, ctx: discord.Interaction, query: str):
         """Search for an issue on Linear!"""
-        await ctx.response.send_message(query)
+
+        linear: LinearAPI = LinearAPI.connect()
+        issue = await linear.get_issue(query)
+        if issue is None:
+            await ctx.response.send_message(content="Could not find an issue for your query.", ephemeral=True)
+
+        embed = discord.Embed()
+        embed.title = f"{issue.identifier} - {issue.title}"
+        embed.url = issue.url
+        embed.description = issue.description
+        embed.color = BLURPLE
+        embed.set_footer(icon_url=ctx.user.avatar.url, text=issue.team.name)
+
+        embed.add_field(name="Status", value=issue.state.name)
+        embed.timestamp = datetime.utcnow()
+
+        await ctx.response.send_message(embed=embed, silent=True)
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
         match error:
