@@ -8,6 +8,9 @@ LINEAR_URL = "https://api.linear.app/graphql"
 
 logger = logging.getLogger("LINEAR_GQL")
 
+BOT_TEAM_ID = "03e2ba7e-32dc-472c-82f2-7d002867bf0b"
+WEB_TEAM_ID = "87198710-5a24-44c5-9b74-d2cc2693ddfd"
+
 
 class LinearError(Exception):
     def __init__(self, *args: object) -> None:
@@ -268,11 +271,19 @@ class LinearAPI:
         variables = {
             "first": 25,
             "term": query,
+            "filter": {
+                "team": {
+                    "or": [
+                        {"id": {"eq": BOT_TEAM_ID}},
+                        {"id": {"eq": WEB_TEAM_ID}},
+                    ]
+                }
+            },
         }
 
         query = """
-        query Issue($term: String!, $first: Int, $after: String) {
-            searchIssues(term: $term, first: $first, after: $after) {
+        query Issue($term: String!, $first: Int, $after: String, $filter: IssueFilter) {
+            searchIssues(term: $term, first: $first, after: $after, filter: $filter) {
                 nodes {
                     id
                     identifier
