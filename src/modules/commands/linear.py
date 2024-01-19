@@ -1,15 +1,17 @@
+import logging
 from datetime import datetime
 from typing import Literal
 
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import CheckFailure
 
 from resources.checks import is_staff
 from resources.constants import BLURPLE, DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
 from resources.helper_bot import HelperBot
 from resources.linear_api import LinearAPI, LinearIssue, LinearTeam
+
+logger = logging.getLogger("CMDS")
 
 
 @app_commands.guild_only()
@@ -82,16 +84,18 @@ class Linear(commands.GroupCog, group_name="linear"):
             content=f"Issue [{created_issue.identifier}]({created_issue.url}) created.", embed=embed
         )
 
+    @app_commands.check(is_staff)
     async def search_autocomplete(self, interaction: discord.Interaction, user_input: str):
+        """Display issues from linear to the user."""
         if not user_input:
             await interaction.response.autocomplete([])
             return
 
         linear: LinearAPI = LinearAPI.connect()
-        issues = await linear.get_issues(query_filter=user_input)
+        issues = await linear.search_for_issues(user_input)
 
         choices = [
-            app_commands.Choice(name=f"{issue.identifier} - {issue.title}", value=issue.id)
+            app_commands.Choice(name=f"{issue.identifier} - {issue.title}"[:100], value=issue.id)
             for issue in issues[:25]
         ]
 
@@ -103,12 +107,16 @@ class Linear(commands.GroupCog, group_name="linear"):
     @app_commands.check(is_staff)
     @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
     async def search(self, ctx: discord.Interaction, query: str):
-        pass
+        """Search for an issue on Linear!"""
+        await ctx.response.send_message(query)
 
     async def cog_app_command_error(self, interaction: discord.Interaction, error):
         match error:
-            case CheckFailure():
+            case app_commands.CheckFailure():
                 error = "You are not allowed to use this command!"
+
+            case _ as err:
+                logger.error(err)
 
         if not interaction.response.is_done():
             await interaction.response.send_message(content=error, ephemeral=True)
