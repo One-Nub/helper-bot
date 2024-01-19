@@ -16,14 +16,14 @@ class LinearError(Exception):
 
 @define
 class IssueState:
-    name: str
+    name: str = None
 
 
 @define
 class LinearTeam:
-    id: str
-    name: str
-    key: str
+    id: str = None
+    name: str = None
+    key: str = None
 
 
 @define
@@ -211,6 +211,9 @@ class LinearAPI:
                 description
                 state {
                     name
+                }
+                team {
+                    name                    
                 }
             }
         }
