@@ -25,6 +25,7 @@
         "**/Thumbs.db": true,
         "**/__pycache__": true,
         "**/.venv": true,
+        "poetry.lock": true,
     },
     "python.analysis.typeCheckingMode": "off",
     "pylint.args": [
@@ -39,7 +40,8 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true
+            "source.organizeImports": "explicit"
         },
-    }
+    },
+    "pylint.cwd": "${workspaceFolder}/src"
 }

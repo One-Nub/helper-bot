@@ -9,6 +9,8 @@ from discord.app_commands import CommandTree
 from discord.ext import commands
 from motor import motor_asyncio
 
+from resources.linear_api import LinearAPI
+
 instance: "HelperBot" = None
 logger = logging.getLogger()
 
@@ -18,6 +20,7 @@ class HelperBot(commands.Bot):
         self,
         command_prefix: str,
         mongodb_url: str,
+        linear_api_key: str,
         *,
         help_command: Optional[commands.HelpCommand] = None,
         tree_cls: Type[CommandTree] = CommandTree,
@@ -52,7 +55,17 @@ class HelperBot(commands.Bot):
             self.db = MongoDB(mongodb_url)
         else:
             logging.error("NO MONGODB URL WAS FOUND.")
+
+        if linear_api_key:
+            LinearAPI.connect(linear_api_key)
+        else:
+            logging.error("NO LINEAR API KEY FOUND.")
+
         instance = self
+
+    async def setup_hook(self):
+        # im lazy
+        await self.load_extension("modules.commands.linear")
 
     @property
     def uptime(self) -> timedelta:
