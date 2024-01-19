@@ -111,13 +111,16 @@ class LinearAPI:
         team_labels = resp_json["data"]["team"]["labels"]["nodes"]
         return [IssueLabel(**label) for label in team_labels]
 
-    async def create_issue(self, team_id: str, title: str, description: str = None) -> LinearIssue | None:
+    async def create_issue(
+        self, team_id: str, title: str, description: str = None, label_ids: list[str] = None
+    ) -> LinearIssue | None:
         """Create an issue in the triage panel for a team"""
         variables = {
             "input": {
                 "title": title,
                 "description": description,
                 "teamId": team_id,
+                "labelIds": label_ids,
             }
         }
         query = """
