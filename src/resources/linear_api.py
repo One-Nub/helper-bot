@@ -20,6 +20,12 @@ class IssueState:
 
 
 @define
+class IssueLabel:
+    name: str = None
+    id: str = None
+
+
+@define
 class LinearTeam:
     id: str = None
     name: str = None
@@ -80,6 +86,30 @@ class LinearAPI:
 
         team_nodes = resp_json["data"]["teams"]["nodes"]
         return [LinearTeam(**team) for team in team_nodes]
+
+    async def get_team_labels(self, team_id: str) -> list[IssueLabel]:
+        query = """
+        query IssueLabel($teamId: String!) {
+            team(id: $teamId) {
+                labels {
+                    nodes {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+        """
+        variables = {"teamId": team_id}
+
+        req = await self.session.post(LINEAR_URL, json={"query": query, "variables": variables})
+        resp_json = await req.json()
+        if resp_json.get("errors", []):
+            logger.error(resp_json)
+            raise LinearError()
+
+        team_labels = resp_json["data"]["team"]["labels"]["nodes"]
+        return [IssueLabel(**label) for label in team_labels]
 
     async def create_issue(self, team_id: str, title: str, description: str = None) -> LinearIssue | None:
         """Create an issue in the triage panel for a team"""
