@@ -193,7 +193,7 @@ class LinearAPI:
 
         return [LinearIssue.parse_extras(issue) for issue in matching_nodes]
 
-    async def get_issue(self, key: str) -> LinearIssue:
+    async def get_issue(self, key: str) -> LinearIssue | None:
         """Get a single issue from Linear based on the ID of the issue."""
 
         variables: dict = {
@@ -209,6 +209,9 @@ class LinearAPI:
                 url
                 title
                 description
+                state {
+                    name
+                }
             }
         }
         """
@@ -220,7 +223,7 @@ class LinearAPI:
         resp_json = await req.json()
         if resp_json.get("errors", []):
             logger.error(resp_json)
-            raise LinearError()
+            return None
 
         return LinearIssue.parse_extras(resp_json["data"]["issue"])
 
