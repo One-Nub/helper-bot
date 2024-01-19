@@ -15,6 +15,7 @@ logger = logging.getLogger("CMDS")
 
 
 @app_commands.guild_only()
+@app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
 class Linear(commands.GroupCog, group_name="linear"):
     def __init__(self, bot):
         self.bot = bot
@@ -27,7 +28,6 @@ class Linear(commands.GroupCog, group_name="linear"):
         team="The team this issue is for",
     )
     @app_commands.check(is_staff)
-    @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
     async def issue(
         self,
         ctx: discord.Interaction,
@@ -114,7 +114,6 @@ class Linear(commands.GroupCog, group_name="linear"):
     @app_commands.describe(query="What are you searching for?")
     @app_commands.autocomplete(query=search_autocomplete)
     @app_commands.check(is_staff)
-    @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
     async def search(self, ctx: discord.Interaction, query: str):
         """Search for an issue on Linear!"""
 
