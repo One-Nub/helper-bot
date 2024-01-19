@@ -82,7 +82,7 @@ class LinearAPI:
         return [LinearTeam(**team) for team in team_nodes]
 
     async def create_issue(self, team_id: str, title: str, description: str = None) -> LinearIssue | None:
-        """Create an issue in the triage panel"""
+        """Create an issue in the triage panel for a team"""
         variables = {
             "input": {
                 "title": title,
@@ -122,11 +122,19 @@ class LinearAPI:
 
     async def get_issues(self, query_filter: str = None) -> list[LinearIssue]:
         """Get all issues that optionally match a filter string."""
+
+        number_opt = 0
+        try:
+            number_opt = int(query_filter)
+        except ValueError:
+            pass
+
         variables: dict = {
             "filter": {
                 "or": [
                     {"title": {"containsIgnoreCase": query_filter}},
                     {"description": {"containsIgnoreCase": query_filter}},
+                    {"number": {"eq": number_opt}},
                 ],
             },
             "first": 50,
@@ -184,3 +192,70 @@ class LinearAPI:
             has_next_page = page_info.get("hasNextPage", False)
 
         return [LinearIssue.parse_extras(issue) for issue in matching_nodes]
+
+    async def get_issue(self, key: str) -> LinearIssue:
+        """Get a single issue from Linear based on the ID of the issue."""
+
+        variables: dict = {
+            "issueId": key,
+        }
+
+        query = """
+        query Issue($issueId: String!) {
+            issue(id: $issueId) {
+                id
+                identifier
+                number
+                url
+                title
+                description
+            }
+        }
+        """
+
+        post_data = {"query": query, "variables": variables}
+
+        req = await self.session.post(LINEAR_URL, json=post_data)
+
+        resp_json = await req.json()
+        if resp_json.get("errors", []):
+            logger.error(resp_json)
+            raise LinearError()
+
+        return LinearIssue.parse_extras(resp_json["data"]["issue"])
+
+    async def search_for_issues(self, query: str) -> list[LinearIssue]:
+        """Search for an issue on Linear using the *right* query for it..."""
+        variables = {
+            "first": 25,
+            "term": query,
+        }
+
+        query = """
+        query Issue($term: String!, $first: Int, $after: String) {
+            searchIssues(term: $term, first: $first, after: $after) {
+                nodes {
+                    id
+                    identifier
+                    number
+                    url
+                    title
+                    description
+                    state {
+                        name
+                    }
+                }
+            }
+        }
+        """
+
+        post_data = {"query": query, "variables": variables}
+
+        req = await self.session.post(LINEAR_URL, json=post_data)
+        resp_json = await req.json()
+        if resp_json.get("errors", []):
+            logger.error(resp_json)
+            raise LinearError()
+
+        issue_list = resp_json["data"]["searchIssues"]["nodes"]
+        return [LinearIssue.parse_extras(issue) for issue in issue_list]
