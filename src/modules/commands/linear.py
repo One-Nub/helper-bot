@@ -55,10 +55,19 @@ class Linear(commands.GroupCog, group_name="linear"):
             )
             return
 
+        issue_labels = await linear.get_team_labels(chosen_team.id)
+
+        bug_label = next((label for label in issue_labels if label.name.lower() == "bug"), None)
+        label_ids = [] if not bug_label else [bug_label.id]
+
         description = "\n".join(description.split("\\n"))
         description += f"\n\n> *Created by {ctx.user.name} ({ctx.user.id}) on Discord.*"
+
         created_issue: LinearIssue = await linear.create_issue(
-            chosen_team.id, title=title, description=description
+            chosen_team.id,
+            title=title,
+            description=description,
+            label_ids=label_ids,
         )
 
         if not created_issue:
