@@ -112,7 +112,12 @@ class Linear(commands.GroupCog, group_name="linear"):
         linear: LinearAPI = LinearAPI.connect()
         issue = await linear.get_issue(query)
         if issue is None:
-            await ctx.response.send_message(content="Could not find an issue for your query.", ephemeral=True)
+            await ctx.response.send_message(
+                content="Could not find an issue for your query, "
+                "try choosing an option from the autocomplete menu!",
+                ephemeral=True,
+            )
+            return
 
         embed = discord.Embed()
         embed.title = f"{issue.identifier} - {issue.title}"
