@@ -35,7 +35,7 @@ async def is_staff(ctx: (Context | Interaction)) -> bool:
 
     # Get roles from the Bloxlink guild (if you can)
     # Updates the author argument accordingly.
-    if ctx.guild_id != BLOXLINK_GUILD:
+    if ctx.guild.id != BLOXLINK_GUILD:
         try:
             bloxlink_guild = bot.get_guild(BLOXLINK_GUILD) or await bot.fetch_guild(BLOXLINK_GUILD)
             author = bloxlink_guild.get_member(author.id) or await bloxlink_guild.fetch_member(author.id)
@@ -60,7 +60,7 @@ async def is_staff_or_trial(ctx: (Context | Interaction)) -> bool:
 
     # Get roles from the Bloxlink guild (if you can)
     # Updates the author argument accordingly.
-    if ctx.guild_id != BLOXLINK_GUILD:
+    if ctx.guild.id != BLOXLINK_GUILD:
         try:
             bloxlink_guild = bot.get_guild(BLOXLINK_GUILD) or await bot.fetch_guild(BLOXLINK_GUILD)
             author = bloxlink_guild.get_member(author.id) or await bloxlink_guild.fetch_member(author.id)
