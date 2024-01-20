@@ -16,7 +16,7 @@ logger = logging.getLogger("CMDS")
 
 @app_commands.guild_only()
 @app_commands.guilds(TEAM_CENTER_GUILD, *DEVELOPMENT_GUILDS)
-class Linear(commands.GroupCog, group_name="linear"):
+class Linear(commands.GroupCog, group_name="bug"):
     def __init__(self, bot):
         self.bot = bot
         super().__init__()
