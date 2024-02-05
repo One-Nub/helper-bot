@@ -1,16 +1,19 @@
+import asyncio
 import traceback
 
 from discord.ext.commands import CheckFailure, CommandError, CommandNotFound, Context, MissingRequiredArgument
 
+from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
 
 @bot.event
 async def on_command_error(ctx: Context, error: CommandError):
-    if (ctx.command is not None and ctx.command.has_error_handler()) or (
-        ctx.cog is not None and ctx.cog.has_error_handler()
-    ):
-        # Ignore commands that have their own error handlers.
+    if (
+        (ctx.command is not None and ctx.command.has_error_handler())
+        or (ctx.cog is not None and ctx.cog.has_error_handler())
+    ) and not isinstance(error, HelperError):
+        # Ignore commands that have their own error handlers, unless it is a HelperError.
         return
 
     match error:
@@ -68,10 +71,26 @@ async def on_command_error(ctx: Context, error: CommandError):
                 await ctx.message.delete()
 
         case _ as err:
-            output = f"{err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
-            await ctx.reply(
-                content=output,
-                mention_author=False,
-                ephemeral=True,
-            )
-            raise err
+            # Catch HelperError (its wrapped in CommandInvokeError)
+            # Lets us handle the original error if desired.
+            match err.original:
+                case HelperError() as sub_err:
+                    await ctx.reply(
+                        content=sub_err,
+                        mention_author=False,
+                        delete_after=5.0,
+                        ephemeral=True,
+                    )
+
+                    if not ctx.interaction:
+                        await asyncio.sleep(5)
+                        await ctx.message.delete()
+
+                case _:
+                    output = f"{err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+                    await ctx.reply(
+                        content=output,
+                        mention_author=False,
+                        ephemeral=True,
+                    )
+                    raise err
