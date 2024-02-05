@@ -12,6 +12,8 @@ from resources.helper_bot import instance as bot
 
 MAX_TAGS_PER_PAGE = 20
 
+# ------------ TAG AUTOCOMPLETE HANDLERS ------------
+
 
 async def tag_name_autocomplete(interaction: discord.Interaction, user_input: str):
     tags = await bot.db.get_all_tags()
@@ -27,6 +29,24 @@ async def tag_name_autocomplete(interaction: discord.Interaction, user_input: st
         item for item in valid_names if Sorensen().similarity(user_input, item) > 0.65 or user_input in item
     ]
     return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+
+async def tag_alias_autocomplete(interaction: discord.Interaction, user_input: str):
+    tags = await bot.db.get_all_tags()
+    valid_names = []
+    for tag in tags:
+        valid_names.extend(tag.get("aliases", []))
+
+    if user_input == "":
+        return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+    valid_names = [
+        item for item in valid_names if Sorensen().similarity(user_input, item) > 0.65 or user_input in item
+    ]
+    return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+
+# ------------ TAG COMMANDS ------------
 
 
 @bot.hybrid_group("tag", description="Send a tag to this channel!", fallback="send")
@@ -253,6 +273,87 @@ async def view_tag(ctx: Context):
     # Get the embed & send.
     embed = await build_page(ctx.author.display_avatar, tag_names, 0)
     await ctx.reply(embed=embed, view=view)
+
+
+# ------------ TAG ALIAS ------------
+
+
+@tag_base.group("alias", description="Modify aliases for a tag.")
+@check(is_staff)
+async def alias_base(ctx: Context):
+    return await ctx.reply(
+        "You need to run `.tag alias add` or `.tag alias delete`! Or use the slash command instead.",
+        mention_author=False,
+    )
+
+
+@alias_base.command("add", description="Add an alias to a tag.")
+@app_commands.autocomplete(tag=tag_name_autocomplete)
+@check(is_staff)
+async def alias_add(ctx: Context, tag: str, alias: str):
+    matching_tag = await bot.db.get_tag(tag)
+    if not matching_tag:
+        return await ctx.reply(
+            f'The tag "{tag}" does not exist, so you can\'t add an alias to it!',
+            mention_author=False,
+        )
+
+    aliases: list = matching_tag.get("aliases", [])
+    if (alias in aliases) or alias.lower() == matching_tag["_id"].lower():
+        return await ctx.reply(
+            f"You can't add the alias \"{alias}\" to the tag {matching_tag['_id']}.",
+            mention_author=False,
+        )
+
+    if len(alias) > 32:
+        return await ctx.reply(
+            "The alias you are adding is too long. Keep it under 32 characters!",
+            mention_author=False,
+        )
+
+    aliases.append(alias.lower())
+    await bot.db.update_tag(tag, matching_tag["content"], aliases=aliases, updated_at=datetime.now())
+
+    return await ctx.reply(
+        f"The alias `{alias}` has been added to the tag `{matching_tag['_id']}`",
+        mention_author=False,
+    )
+
+
+@alias_base.command("delete", description="Remove an alias.")
+@app_commands.autocomplete(alias=tag_alias_autocomplete)
+@check(is_staff)
+async def alias_delete(ctx: Context, alias: str):
+    matching_tag = await bot.db.get_tag(alias)
+    if not matching_tag:
+        return await ctx.reply(
+            f'The alias "{alias}" does not exist, so you can\'t delete it!',
+            mention_author=False,
+        )
+
+    if matching_tag["_id"].lower() == alias.lower():
+        return await ctx.reply(
+            "That was the tag name, not an alias for the tag. You can't delete that from here!",
+            mention_author=False,
+        )
+
+    aliases: list = matching_tag["aliases"]
+    aliases.remove(alias.lower())
+
+    await bot.db.update_tag(
+        matching_tag["_id"],
+        matching_tag["content"],
+        aliases=aliases,
+        updated_at=datetime.now(),
+    )
+
+    return await ctx.reply(
+        f"The alias \"{alias}\" was removed from the tag {matching_tag['_id']}",
+        mention_author=False,
+    )
+
+
+# ------------ INTERACTION HANDLERS/UTILITY FUNCTIONS FOR TAG COMMANDS ------------
 
 
 @bot.register_button_handler("tag_all")
