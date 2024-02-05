@@ -1,13 +1,15 @@
+import asyncio
 import math
 from datetime import datetime, timedelta
 
 import discord
 from discord import app_commands, ui
-from discord.ext.commands import Context, check
+from discord.ext.commands import CheckFailure, CommandError, Context, MissingRequiredArgument, check
 from textdistance import Sorensen
 
 from resources.checks import is_staff, is_staff_or_trial
 from resources.constants import BLURPLE, UNICODE_LEFT, UNICODE_RIGHT
+from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
 MAX_TAGS_PER_PAGE = 20
@@ -351,6 +353,46 @@ async def alias_delete(ctx: Context, alias: str):
         f"The alias \"{alias}\" was removed from the tag {matching_tag['_id']}",
         mention_author=False,
     )
+
+
+@alias_add.error
+@alias_delete.error
+async def alias_command_errors(ctx: Context, error: CommandError):
+    match error:
+        case CheckFailure():
+            await ctx.reply(
+                content="You do not have permissions to use this command!",
+                mention_author=False,
+                delete_after=5.0,
+                ephemeral=True,
+            )
+
+            if not ctx.interaction:
+                await asyncio.sleep(5)
+                await ctx.message.delete()
+
+        case MissingRequiredArgument():
+            param = error.param.name
+            message = f"You're missing the required {param} argument!"
+
+            if param == "tag":
+                message = "You need to give the command a tag name!"
+            elif param == "alias":
+                message = "You need to give the command the name of an alias!"
+
+            await ctx.reply(
+                content=message,
+                mention_author=False,
+                delete_after=5.0,
+                ephemeral=True,
+            )
+
+            if not ctx.interaction:
+                await asyncio.sleep(5)
+                await ctx.message.delete()
+
+        case _ as err:
+            raise HelperError(err) from err
 
 
 # ------------ INTERACTION HANDLERS/UTILITY FUNCTIONS FOR TAG COMMANDS ------------
