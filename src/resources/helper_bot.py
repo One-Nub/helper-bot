@@ -178,7 +178,7 @@ class MongoDB:
             "content": content,
         }
 
-        if aliases:
+        if aliases is not None:
             aliases = [x.lower() for x in aliases]
             data["aliases"] = aliases
 
