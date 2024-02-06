@@ -36,11 +36,21 @@ async def api(ctx: Context, lookup_id: int = 0):
 @discord.app_commands.context_menu(name="Bloxlink API Lookup")
 async def api_menu(interaction: discord.Interaction, user: discord.Member):
     if interaction.guild_id != BLOXLINK_GUILD:
-        raise HelperError("This context menu only works in Bloxlink HQ!")
+        await interaction.response.send_message(
+            content="This context menu only works in Bloxlink HQ!",
+            ephemeral=True,
+            allowed_mentions=discord.AllowedMentions(users=False),
+        )
+        return
 
     allowed_to_run = await is_staff_or_trial(interaction)
     if not allowed_to_run:
-        raise HelperError("You are not allowed to use this context menu!")
+        await interaction.response.send_message(
+            content="You are not allowed to use this context menu!",
+            ephemeral=True,
+            allowed_mentions=discord.AllowedMentions(users=False),
+        )
+        return
 
     response_embed, response_buttons = await api_request_handler(user.id)
     response_embed.set_footer(text="Bloxlink Helper", icon_url=interaction.user.display_avatar)
