@@ -1,6 +1,8 @@
 import asyncio
 import traceback
+from datetime import datetime
 
+import discord
 from discord.ext.commands import (
     CheckFailure,
     CommandError,
@@ -10,6 +12,7 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 
+from resources.constants import RED
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
@@ -17,13 +20,13 @@ from resources.helper_bot import instance as bot
 @bot.event
 async def on_command_error(ctx: Context, error: CommandError):
     # For commands with error handlers, we don't handle it here EXCEPT when the error is a HelperError.
-    is_original_custom_error = isinstance(error, CommandInvokeError) and not isinstance(
+    original_is_custom_error = isinstance(error, CommandInvokeError) and isinstance(
         error.original, HelperError
     )
     valid_error_handler = ctx.command is not None and ctx.command.has_error_handler()
     valid_cog_handler = ctx.cog is not None and ctx.cog.has_error_handler()
 
-    if (valid_error_handler or valid_cog_handler) and is_original_custom_error:
+    if (valid_error_handler or valid_cog_handler) and not original_is_custom_error:
         return
 
     match error:
@@ -83,12 +86,22 @@ async def on_command_error(ctx: Context, error: CommandError):
                 await ctx.message.delete()
 
         case CommandInvokeError() as err:
+            error_embed = discord.Embed(
+                title="<:BloxlinkDead:823633973967716363> Error",
+                description=error,
+                color=RED,
+            )
+            error_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+            error_embed.timestamp = datetime.now()
+
             # Catch HelperError (its wrapped in CommandInvokeError)
             # Lets us handle the original error if desired.
             match err.original:
                 case HelperError() as sub_err:
+                    error_embed.description = sub_err
+
                     await ctx.reply(
-                        content=sub_err,
+                        embed=error_embed,
                         mention_author=False,
                         delete_after=5.0,
                         ephemeral=True,
@@ -99,18 +112,29 @@ async def on_command_error(ctx: Context, error: CommandError):
                         await ctx.message.delete()
 
                 case _ as sub_err:
-                    output = f"{sub_err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+                    error_embed.description = (
+                        f"{sub_err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+                    )
+
                     await ctx.reply(
-                        content=output,
+                        embed=error_embed,
                         mention_author=False,
                         ephemeral=True,
                     )
                     raise sub_err
 
         case _ as err:
-            output = f"{err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+            error_embed = discord.Embed(
+                title="<:BloxlinkDead:823633973967716363> Error",
+                description=error,
+                color=RED,
+            )
+            error_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+            error_embed.timestamp = datetime.now()
+            error_embed.description = f"{sub_err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+
             await ctx.reply(
-                content=output,
+                embed=error_embed,
                 mention_author=False,
                 ephemeral=True,
             )
