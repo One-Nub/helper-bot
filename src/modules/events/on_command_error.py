@@ -60,7 +60,6 @@ async def on_command_error(ctx: Context, error: CommandError):
 
                 await bot.db.update_tag(
                     name,
-                    match_command["content"],
                     use_count=match_command["use_count"] + 1,
                 )
 

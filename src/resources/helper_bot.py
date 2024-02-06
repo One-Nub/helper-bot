@@ -54,12 +54,12 @@ class HelperBot(commands.Bot):
         if mongodb_url:
             self.db = MongoDB(mongodb_url)
         else:
-            logging.error("NO MONGODB URL WAS FOUND.")
+            logger.error("NO MONGODB URL WAS FOUND.")
 
         if linear_api_key:
             LinearAPI.connect(linear_api_key)
         else:
-            logging.error("NO LINEAR API KEY FOUND.")
+            logger.error("NO LINEAR API KEY FOUND.")
 
         instance = self
 
@@ -90,7 +90,7 @@ class HelperBot(commands.Bot):
             logger.error(f"Module {import_name} errored: {e}")
             raise e
 
-        logging.info(f"Loaded module {import_name}")
+        logger.info(f"Loaded module {import_name}")
 
     def register_button_handler(self, custom_id_prefix: str):
         """Decorator to register a handler to handle a custom_id for a button.
@@ -114,10 +114,10 @@ class MongoDB:
         Args:
             connection_string (str): The URL to connect to MongoDB with.
         """
-        logging.info("Connecting to MongoDB.")
+        logger.info("Connecting to MongoDB.")
         self.client = motor_asyncio.AsyncIOMotorClient(connection_string, tlsCAFile=certifi.where())
         self.db = self.client["bloxlink_helper"]
-        logging.info("MongoDB initialized.")
+        logger.info("MongoDB initialized.")
 
     async def get_all_tags(self) -> list:
         """Return a list of all the tags in the database.
@@ -151,7 +151,7 @@ class MongoDB:
     async def update_tag(
         self,
         name: str,
-        content: str,
+        content: str = None,
         aliases: list[str] = None,
         author: str = None,
         use_count: int = None,
@@ -174,9 +174,10 @@ class MongoDB:
             updated_at (datetime, optional): Date the command was last updated at. Defaults to None.
         """
         name = name.lower()
-        data = {
-            "content": content,
-        }
+        data = {}
+
+        if content is not None:
+            data["content"] = str(content)
 
         if aliases is not None:
             aliases = [x.lower() for x in aliases]
@@ -193,6 +194,10 @@ class MongoDB:
 
         if updated_at is not None:
             data["updated_at"] = updated_at.isoformat()
+
+        if not data:
+            logger.warning(f"No data was found when updating the tag {name}.")
+            return
 
         filter_query = {
             "$or": [

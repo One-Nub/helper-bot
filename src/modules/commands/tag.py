@@ -98,7 +98,6 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
 
     await bot.db.update_tag(
         tag["_id"],
-        tag["content"],
         use_count=tag["use_count"] + 1,
     )
 
@@ -152,7 +151,7 @@ async def edit_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â
 
     await bot.db.update_tag(
         tag_name,
-        tag_content,
+        content=tag_content,
         author=ctx.author.id,
         updated_at=datetime.now(),
     )
@@ -283,7 +282,11 @@ async def alias_add(ctx: Context, tag: str, alias: str):
         raise HelperError("The alias you are adding is too long. Keep it under 32 characters!")
 
     aliases.append(alias.lower())
-    await bot.db.update_tag(tag, matching_tag["content"], aliases=aliases, updated_at=datetime.now())
+    await bot.db.update_tag(
+        tag,
+        aliases=aliases,
+        updated_at=datetime.now(),
+    )
 
     return await ctx.reply(
         f"The alias `{alias}` has been added to the tag `{matching_tag['_id']}`",
@@ -309,7 +312,6 @@ async def alias_delete(ctx: Context, alias: str):
 
     await bot.db.update_tag(
         matching_tag["_id"],
-        matching_tag["content"],
         aliases=aliases,
         updated_at=datetime.now(),
     )
