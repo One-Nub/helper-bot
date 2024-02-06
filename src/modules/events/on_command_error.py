@@ -29,8 +29,20 @@ async def on_command_error(ctx: Context, error: CommandError):
     if (valid_error_handler or valid_cog_handler) and not original_is_custom_error:
         return
 
+    error_embed = discord.Embed(
+        title="<:BloxlinkDead:823633973967716363> Error",
+        description=error,
+        color=RED,
+    )
+    error_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+    error_embed.timestamp = datetime.now()
+
+    should_delete_original = True
+
     match error:
         case CommandNotFound():
+            # Check if a tag that matches the input can be sent.
+
             name = ctx.invoked_with
             if not name:
                 return
@@ -55,16 +67,7 @@ async def on_command_error(ctx: Context, error: CommandError):
             return
 
         case CheckFailure():
-            await ctx.reply(
-                content="You do not have permissions to use this command!",
-                mention_author=False,
-                delete_after=5.0,
-                ephemeral=True,
-            )
-
-            if not ctx.interaction:
-                await asyncio.sleep(5)
-                await ctx.message.delete()
+            error_embed.description = "You do not have permissions to use this command!"
 
         case MissingRequiredArgument():
             param = error.param.name
@@ -74,68 +77,36 @@ async def on_command_error(ctx: Context, error: CommandError):
                 param = "the tag content" if param == "tag_content" else "the tag name"
                 message = f"You're missing {param}!"
 
-            await ctx.reply(
-                content=message,
-                mention_author=False,
-                delete_after=5.0,
-                ephemeral=True,
-            )
-
-            if not ctx.interaction:
-                await asyncio.sleep(5)
-                await ctx.message.delete()
+            error_embed.description = message
 
         case CommandInvokeError() as err:
-            error_embed = discord.Embed(
-                title="<:BloxlinkDead:823633973967716363> Error",
-                description=error,
-                color=RED,
-            )
-            error_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-            error_embed.timestamp = datetime.now()
-
             # Catch HelperError (its wrapped in CommandInvokeError)
             # Lets us handle the original error if desired.
             match err.original:
                 case HelperError() as sub_err:
                     error_embed.description = str(sub_err)
 
-                    await ctx.reply(
-                        embed=error_embed,
-                        mention_author=False,
-                        delete_after=5.0,
-                        ephemeral=True,
-                    )
-
-                    if not ctx.interaction:
-                        await asyncio.sleep(5)
-                        await ctx.message.delete()
-
                 case _ as sub_err:
                     error_embed.description = (
                         f"{sub_err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
                     )
-
-                    await ctx.reply(
-                        embed=error_embed,
-                        mention_author=False,
-                        ephemeral=True,
-                    )
-                    raise sub_err
+                    should_delete_original = False
 
         case _ as err:
-            error_embed = discord.Embed(
-                title="<:BloxlinkDead:823633973967716363> Error",
-                description=error,
-                color=RED,
-            )
-            error_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-            error_embed.timestamp = datetime.now()
             error_embed.description = f"{sub_err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+            should_delete_original = False
 
-            await ctx.reply(
-                embed=error_embed,
-                mention_author=False,
-                ephemeral=True,
-            )
-            raise err
+    # Send the error embed
+    await ctx.reply(
+        embed=error_embed,
+        mention_author=False,
+        delete_after=5.0 if should_delete_original else None,
+        ephemeral=True,
+    )
+
+    if not ctx.interaction and should_delete_original:
+        await asyncio.sleep(5)
+        await ctx.message.delete()
+
+    if not should_delete_original:
+        raise err
