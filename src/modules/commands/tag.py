@@ -62,191 +62,155 @@ async def tag_alias_autocomplete(interaction: discord.Interaction, user_input: s
 @app_commands.guild_only()
 @app_commands.autocomplete(name=tag_name_autocomplete)
 async def tag_base(ctx: Context, name: str, *, message: str = "0"):
-    try:
-        ## if name is empty, raise error
-        if name == "0":
-            raise Exception("You forgot the tag name!")
+    ## if name is empty, raise error
+    if name == "0":
+        raise HelperError("You forgot the tag name!")
 
-        tag = await bot.db.get_tag(name)
-        if tag is None:
-            raise Exception(f'The tag "{name}" was not found!')
+    tag = await bot.db.get_tag(name)
+    if tag is None:
+        raise HelperError(f'The tag "{name}" was not found!')
 
-        if ctx.interaction == None:
-            await ctx.message.delete()
+    if ctx.interaction is None:
+        await ctx.message.delete()
 
-        allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False)
+    allowed_mentions = discord.AllowedMentions(roles=False, users=True, everyone=False)
 
-        if message != "0" and ctx.interaction is None:
-            msg = await ctx.send(
-                tag["content"],
-                allowed_mentions=allowed_mentions,
-                reference=ctx.message.reference,
-            )
-            await msg.edit(
-                content=f"{message} {tag['content']}",
-                allowed_mentions=allowed_mentions,
-            )
-
-        elif message != "0" and ctx.interaction is not None:
-            await ctx.send(f"{message} {tag['content']}", allowed_mentions=allowed_mentions)
-
-        else:
-            await ctx.send(
-                tag["content"],
-                allowed_mentions=allowed_mentions,
-                reference=ctx.message.reference,
-            )
-
-        await bot.db.update_tag(
-            tag["_id"],
+    if message != "0" and ctx.interaction is None:
+        msg = await ctx.send(
             tag["content"],
-            use_count=tag["use_count"] + 1,
+            allowed_mentions=allowed_mentions,
+            reference=ctx.message.reference,
         )
-    ## send the error message
-    except Exception as Error:
-        await ctx.send(
-            Error,
-            delete_after=4.0 if not ctx.interaction else None,
-            reference=ctx.message,
-            mention_author=True,
-            silent=True,
-            ephemeral=True,
+        await msg.edit(
+            content=f"{message} {tag['content']}",
+            allowed_mentions=allowed_mentions,
         )
 
-        if ctx.interaction is None:
-            await ctx.message.delete()
+    elif message != "0" and ctx.interaction is not None:
+        await ctx.send(f"{message} {tag['content']}", allowed_mentions=allowed_mentions)
+
+    else:
+        await ctx.send(
+            tag["content"],
+            allowed_mentions=allowed_mentions,
+            reference=ctx.message.reference,
+        )
+
+    await bot.db.update_tag(
+        tag["_id"],
+        tag["content"],
+        use_count=tag["use_count"] + 1,
+    )
 
 
 @tag_base.command("add", description="Add a tag to the tag list.", aliases=["create"])
 @check(is_staff)
 async def add_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
-    try:
-        ## if name or content is empty, raise error
-        if tag_name == "⅋" or tag_content == "⅋":
-            raise Exception("Please provide both tag name and tag content.")
+    ## if name or content is empty, raise error
+    if tag_name == "⅋" or tag_content == "⅋":
+        raise HelperError("Please provide both tag name and tag content.")
 
-        if len(tag_content) > 2000:
-            raise Exception("Tag content exceeds maximum length.")
+    if len(tag_content) > 2000:
+        raise HelperError("Tag content exceeds maximum length.")
 
-        else:
-            check_tag = await bot.db.get_tag(tag_name)
-            if check_tag is not None:
-                raise Exception("Tag already exists.")
+    check_tag = await bot.db.get_tag(tag_name)
+    if check_tag is not None:
+        raise HelperError("Tag already exists.")
 
-            tag_content = "\n".join(tag_content.split("\\n"))
+    tag_content = "\n".join(tag_content.split("\\n"))
 
-            await bot.db.update_tag(
-                tag_name,
-                tag_content,
-                aliases=None,
-                author=ctx.author.id,
-                use_count=0,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
-            )
+    await bot.db.update_tag(
+        tag_name,
+        tag_content,
+        aliases=None,
+        author=ctx.author.id,
+        use_count=0,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
 
-            await ctx.send(f"Tag `{tag_name}` has been added.")
-        ## add the tag to db
-
-    ## send the error message
-    except Exception as Error:
-        await ctx.send(Error)
+    await ctx.send(f"Tag `{tag_name}` has been added.")
+    ## add the tag to db
 
 
 @tag_base.command("edit", description="Edit a current tag in the list.")
 @app_commands.autocomplete(tag_name=tag_name_autocomplete)
 @check(is_staff)
 async def edit_tag(ctx: Context, tag_name: str = "⅋", *, tag_content: str = "⅋"):
-    try:
-        ## if name or content is empty, raise error
-        if tag_name == "⅋" or tag_content == "⅋":
-            raise Exception("Please provide both tag name and tag content.")
+    ## if name or content is empty, raise error
+    if tag_name == "⅋" or tag_content == "⅋":
+        raise HelperError("Please provide both tag name and tag content.")
 
-        if len(tag_content) > 2000:
-            raise Exception("Tag content exceeds maximum length.")
+    if len(tag_content) > 2000:
+        raise HelperError("Tag content exceeds maximum length.")
 
-        else:
-            check_tag = await bot.db.get_tag(tag_name)
-            if check_tag is None:
-                raise Exception("Tag does not exist. Please create the tag with `tag add` instead.")
+    check_tag = await bot.db.get_tag(tag_name)
+    if check_tag is None:
+        raise HelperError("Tag does not exist. Please create the tag with `tag add` instead.")
 
-            tag_content = "\n".join(tag_content.split("\\n"))
+    tag_content = "\n".join(tag_content.split("\\n"))
 
-            await bot.db.update_tag(
-                tag_name,
-                tag_content,
-                author=ctx.author.id,
-                updated_at=datetime.now(),
-            )
+    await bot.db.update_tag(
+        tag_name,
+        tag_content,
+        author=ctx.author.id,
+        updated_at=datetime.now(),
+    )
 
-            await ctx.send(f"Tag `{tag_name}` has been edited.")
-        ## add the tag to db
-
-    ## send the error message
-    except Exception as Error:
-        await ctx.send(Error)
+    await ctx.send(f"Tag `{tag_name}` has been edited.")
+    ## add the tag to db
 
 
 @tag_base.command("delete", description="Remove a tag from the tag list.")
 @app_commands.autocomplete(name=tag_name_autocomplete)
 @check(is_staff)
 async def delete_tag(ctx: Context, name: str = "0"):
-    try:
-        ## if name is empty, raise error
-        if name == "0":
-            raise Exception("You forgot the tag name!")
+    ## if name is empty, raise error
+    if name == "0":
+        raise HelperError("You forgot the tag name!")
 
-        ## delete the tag
-        if await bot.db.get_tag(name) is not None:
-            await bot.db.delete_tag(name)
-            await ctx.send("Tag has been deleted.")
-        ## if no tag found, raise error
-        else:
-            raise Exception("Tag was not found.")
-
-    ## send the error message
-    except Exception as Error:
-        await ctx.send(Error)
+    ## delete the tag
+    if await bot.db.get_tag(name) is not None:
+        await bot.db.delete_tag(name)
+        await ctx.send("Tag has been deleted.")
+    ## if no tag found, raise error
+    else:
+        raise HelperError("Tag was not found.")
 
 
 @tag_base.command("info", description="Information about a tag.")
 @app_commands.autocomplete(name=tag_name_autocomplete)
 @check(is_staff_or_trial)
 async def tag_info(ctx: Context, name: str = "0"):
-    try:
-        ## if name is empty, raise error
-        if name == "0":
-            raise Exception("You forgot the tag name!")
+    ## if name is empty, raise error
+    if name == "0":
+        raise HelperError("You forgot the tag name!")
 
-        ## delete the tag
-        tag = await bot.db.get_tag(name)
-        if tag is None:
-            raise Exception(f'The tag "{name}" was not found!')
-        else:
-            tag_content = tag["content"]
-            tag_author = tag["author"]
-            tag_use_count = tag["use_count"]
-            tag_created_at = tag["created_at"]
-            embed = discord.Embed(
-                title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {tag['_id']}",
-                description=f"**Content:** \n```{tag_content}```",
-                color=BLURPLE,
-            )
-            embed.add_field(name="Author", value=f"<@{tag_author}> ({tag_author})", inline=True)
-            embed.add_field(name="Use Count", value=tag_use_count, inline=True)
-            embed.add_field(name="Created At", value=tag_created_at, inline=True)
+    ## delete the tag
+    tag = await bot.db.get_tag(name)
+    if tag is None:
+        raise HelperError(f'The tag "{name}" was not found!')
 
-            aliases = tag.get("aliases", [])
-            if len(aliases) > 0:
-                embed.add_field(name="Aliases", value=", ".join(aliases), inline=False)
+    tag_content = tag["content"]
+    tag_author = tag["author"]
+    tag_use_count = tag["use_count"]
+    tag_created_at = tag["created_at"]
+    embed = discord.Embed(
+        title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {tag['_id']}",
+        description=f"**Content:** \n```{tag_content}```",
+        color=BLURPLE,
+    )
+    embed.add_field(name="Author", value=f"<@{tag_author}> ({tag_author})", inline=True)
+    embed.add_field(name="Use Count", value=tag_use_count, inline=True)
+    embed.add_field(name="Created At", value=tag_created_at, inline=True)
 
-            embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-            embed.timestamp = datetime.now()
-            await ctx.reply(embed=embed, mention_author=False)
+    aliases = tag.get("aliases", [])
+    if len(aliases) > 0:
+        embed.add_field(name="Aliases", value=", ".join(aliases), inline=False)
 
-    ## send the error message
-    except Exception as Error:
-        await ctx.send(Error)
+    embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+    embed.timestamp = datetime.now()
+    await ctx.reply(embed=embed, mention_author=False)
 
 
 @tag_base.command("all", description="View all the tags in the tag list.")
@@ -299,14 +263,18 @@ async def alias_base(ctx: Context):
 @app_commands.autocomplete(tag=tag_name_autocomplete)
 @check(is_staff)
 async def alias_add(ctx: Context, tag: str, alias: str):
+    # Check to make sure the tag exists.
     matching_tag = await bot.db.get_tag(tag)
     if not matching_tag:
         raise HelperError(f'The tag "{tag}" does not exist, so you can\'t add an alias to it!')
 
+    # Make sure this alias isn't a duplicate with another tag.
     matching_alias = await bot.db.get_tag(alias)
     if matching_alias:
         raise HelperError(f"That alias already exists for the tag {matching_alias['_id']}!")
 
+    # Make sure this alias isn't a duplicate within the same command.
+    # Really this is covered by the previous check, so it shouldn't be necessary.
     aliases: list = matching_tag.get("aliases", [])
     if (alias in aliases) or alias.lower() == matching_tag["_id"].lower():
         raise HelperError(f"You can't add the alias \"{alias}\" to the tag {matching_tag['_id']}.")
@@ -327,10 +295,12 @@ async def alias_add(ctx: Context, tag: str, alias: str):
 @app_commands.autocomplete(alias=tag_alias_autocomplete)
 @check(is_staff)
 async def alias_delete(ctx: Context, alias: str):
+    # Check to see if the alias actually exists.
     matching_tag = await bot.db.get_tag(alias)
     if not matching_tag:
         raise HelperError(f'The alias "{alias}" does not exist, so you can\'t delete it!')
 
+    # We can't delete tag names from the alias command.
     if matching_tag["_id"].lower() == alias.lower():
         raise HelperError("That was the tag name, not an alias for the tag. You can't delete that from here!")
 
