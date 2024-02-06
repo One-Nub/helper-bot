@@ -1,12 +1,11 @@
-import math
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import discord
-from discord import ui
 from discord.ext.commands import Context, check
 
 from resources.checks import is_cm, is_hr
-from resources.constants import BLURPLE, RED
+from resources.constants import BLURPLE
+from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
 MAX_USERS_PER_PAGE = 10
@@ -63,35 +62,23 @@ async def trials(ctx: Context):
 @check(is_cm)
 async def activity_view(ctx: Context, staff_id):
     """Fetch information about activity from a certain user."""
-    try:
-        if staff_id == 0:
-            raise Exception("Missing argument `staff_id`. Please provide a valid Discord ID.")
+    if staff_id == 0:
+        raise HelperError("Missing argument `staff_id`. Please provide a valid Discord ID.")
 
-        elif len(str(staff_id)) < 17:
-            raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
+    if len(str(staff_id)) < 17:
+        raise HelperError("Invalid Argument `id`. Please provide a valid Discord ID.")
 
-        else:
-            data = await bot.db.get_staff_metrics(int(staff_id))
-            if data is None:
-                raise Exception("There is no data for this user.")
+    data = await bot.db.get_staff_metrics(int(staff_id))
+    if data is None:
+        raise HelperError("There is no data for this user.")
 
-            success_embed = discord.Embed()
-            success_embed.title = "Activity Log"
-            success_embed.description = f"Below is the activity log for <@{staff_id}>."
-            success_embed.color = BLURPLE
-            success_embed.add_field(name="Message Count (last 30 days)", value=data["msg_count"])
-            success_embed.add_field(name="Last Message Sent", value=data["updated_at"])
-            success_embed.timestamp = datetime.now()
-            success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+    success_embed = discord.Embed()
+    success_embed.title = "Activity Log"
+    success_embed.description = f"Below is the activity log for <@{staff_id}>."
+    success_embed.color = BLURPLE
+    success_embed.add_field(name="Message Count (last 30 days)", value=data["msg_count"])
+    success_embed.add_field(name="Last Message Sent", value=data["updated_at"])
+    success_embed.timestamp = datetime.now()
+    success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
 
-            await ctx.reply(embed=success_embed, mention_author=False, ephemeral=True)
-    except Exception as Error:
-        embed_var = discord.Embed(
-            title="<:BloxlinkDead:823633973967716363> Error",
-            description=Error,
-            color=RED,
-        )
-        embed_var.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-        embed_var.timestamp = datetime.now()
-
-        await ctx.reply(embed=embed_var)
+    await ctx.reply(embed=success_embed, mention_author=False, ephemeral=True)
