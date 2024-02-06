@@ -5,7 +5,8 @@ from discord.ext.commands import Context, check
 from googletrans import Translator
 
 from resources.checks import is_staff_or_trial
-from resources.constants import BLURPLE, RED
+from resources.constants import BLURPLE
+from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
 
@@ -13,34 +14,22 @@ from resources.helper_bot import instance as bot
 @check(is_staff_or_trial)
 async def translate(ctx: Context, *, translate_string: str = "0"):
     """Translate provided text to another language."""
-    try:
-        if translate_string == "0":
-            raise Exception(
-                "Missing argument `translate_string`. Please provide the string you would like to translate."
-            )
-
-        else:
-            translator = Translator()
-            translation = translator.translate(translate_string, dest="en")
-            translation_src = translation.src
-            success_embed = discord.Embed()
-            success_embed.title = "<:BloxlinkHappy:823633735446167552> Translation Complete"
-            success_embed.description = f"Processed text from `{translation_src}` (detected) to `en`\n\n**Translated Text:**\n```{translation.text}```"
-            success_embed.color = BLURPLE
-            success_embed.timestamp = datetime.now()
-            success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-
-            await ctx.reply(embed=success_embed, mention_author=False)
-    except Exception as Error:
-        embed_var = discord.Embed(
-            title="<:BloxlinkDead:823633973967716363> Error",
-            description=Error,
-            color=RED,
+    if translate_string == "0":
+        raise HelperError(
+            "Missing argument `translate_string`. Please provide the string you would like to translate."
         )
-        embed_var.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-        embed_var.timestamp = datetime.now()
 
-        await ctx.reply(embed=embed_var)
+    translator = Translator()
+    translation = translator.translate(translate_string, dest="en")
+    translation_src = translation.src
+    success_embed = discord.Embed()
+    success_embed.title = "<:BloxlinkHappy:823633735446167552> Translation Complete"
+    success_embed.description = f"Processed text from `{translation_src}` (detected) to `en`\n\n**Translated Text:**\n```{translation.text}```"
+    success_embed.color = BLURPLE
+    success_embed.timestamp = datetime.now()
+    success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+
+    await ctx.reply(embed=success_embed, mention_author=False)
 
 
 @discord.app_commands.context_menu(name="Translate")
