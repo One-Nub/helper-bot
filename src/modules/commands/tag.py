@@ -4,7 +4,14 @@ from datetime import datetime, timedelta
 
 import discord
 from discord import app_commands, ui
-from discord.ext.commands import CheckFailure, CommandError, Context, MissingRequiredArgument, check
+from discord.ext.commands import (
+    CheckFailure,
+    CommandError,
+    CommandInvokeError,
+    Context,
+    MissingRequiredArgument,
+    check,
+)
 from textdistance import Sorensen
 
 from resources.checks import is_staff, is_staff_or_trial
@@ -283,9 +290,8 @@ async def view_tag(ctx: Context):
 @tag_base.group("alias", description="Modify aliases for a tag.")
 @check(is_staff)
 async def alias_base(ctx: Context):
-    return await ctx.reply(
-        "You need to run `.tag alias add` or `.tag alias delete`! Or use the slash command instead.",
-        mention_author=False,
+    raise HelperError(
+        "You need to run `.tag alias add` or `.tag alias delete`! Or use the slash command instead."
     )
 
 
@@ -295,23 +301,18 @@ async def alias_base(ctx: Context):
 async def alias_add(ctx: Context, tag: str, alias: str):
     matching_tag = await bot.db.get_tag(tag)
     if not matching_tag:
-        return await ctx.reply(
-            f'The tag "{tag}" does not exist, so you can\'t add an alias to it!',
-            mention_author=False,
-        )
+        raise HelperError(f'The tag "{tag}" does not exist, so you can\'t add an alias to it!')
+
+    matching_alias = await bot.db.get_tag(alias)
+    if matching_alias:
+        raise HelperError(f"That alias already exists for the tag {matching_alias['_id']}!")
 
     aliases: list = matching_tag.get("aliases", [])
     if (alias in aliases) or alias.lower() == matching_tag["_id"].lower():
-        return await ctx.reply(
-            f"You can't add the alias \"{alias}\" to the tag {matching_tag['_id']}.",
-            mention_author=False,
-        )
+        raise HelperError(f"You can't add the alias \"{alias}\" to the tag {matching_tag['_id']}.")
 
     if len(alias) > 32:
-        return await ctx.reply(
-            "The alias you are adding is too long. Keep it under 32 characters!",
-            mention_author=False,
-        )
+        raise HelperError("The alias you are adding is too long. Keep it under 32 characters!")
 
     aliases.append(alias.lower())
     await bot.db.update_tag(tag, matching_tag["content"], aliases=aliases, updated_at=datetime.now())
@@ -328,16 +329,10 @@ async def alias_add(ctx: Context, tag: str, alias: str):
 async def alias_delete(ctx: Context, alias: str):
     matching_tag = await bot.db.get_tag(alias)
     if not matching_tag:
-        return await ctx.reply(
-            f'The alias "{alias}" does not exist, so you can\'t delete it!',
-            mention_author=False,
-        )
+        raise HelperError(f'The alias "{alias}" does not exist, so you can\'t delete it!')
 
     if matching_tag["_id"].lower() == alias.lower():
-        return await ctx.reply(
-            "That was the tag name, not an alias for the tag. You can't delete that from here!",
-            mention_author=False,
-        )
+        raise HelperError("That was the tag name, not an alias for the tag. You can't delete that from here!")
 
     aliases: list = matching_tag["aliases"]
     aliases.remove(alias.lower())
@@ -391,8 +386,20 @@ async def alias_command_errors(ctx: Context, error: CommandError):
                 await asyncio.sleep(5)
                 await ctx.message.delete()
 
-        case _ as err:
-            raise HelperError(err) from err
+        case CommandInvokeError():
+            if isinstance(error.original, HelperError):
+                return
+
+            await ctx.reply(
+                content=error,
+                mention_author=False,
+                delete_after=5.0,
+                ephemeral=True,
+            )
+
+            if not ctx.interaction:
+                await asyncio.sleep(5)
+                await ctx.message.delete()
 
 
 # ------------ INTERACTION HANDLERS/UTILITY FUNCTIONS FOR TAG COMMANDS ------------
