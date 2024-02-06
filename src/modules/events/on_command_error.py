@@ -60,6 +60,7 @@ async def on_command_error(ctx: Context, error: CommandError):
             )
 
             if not ctx.interaction:
+                await asyncio.sleep(5)
                 await ctx.message.delete()
 
         case MissingRequiredArgument():
@@ -78,6 +79,7 @@ async def on_command_error(ctx: Context, error: CommandError):
             )
 
             if not ctx.interaction:
+                await asyncio.sleep(5)
                 await ctx.message.delete()
 
         case CommandInvokeError() as err:
