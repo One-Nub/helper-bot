@@ -6,6 +6,7 @@ from discord.ext.commands import Context, check
 
 from resources.checks import is_staff_or_trial
 from resources.constants import BLURPLE, RED
+from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
 
@@ -17,50 +18,29 @@ BLOXLINK_GUILD = 372036754078826496
 async def api(ctx: Context, lookup_id: int = 0):
     """Fetch information from the Bloxlink API!"""
 
-    try:
-        if ctx.guild.id != BLOXLINK_GUILD:
-            raise Exception("This command can only be used in the Bloxlink HQ Server!")
+    if ctx.guild.id != BLOXLINK_GUILD:
+        raise HelperError("This command can only be used in the Bloxlink HQ Server!")
 
-        elif lookup_id == 0:
-            raise Exception("Missing argument `id`. Please provide a valid Discord ID.")
+    if lookup_id == 0:
+        raise HelperError("Missing argument `id`. Please provide a valid Discord ID.")
 
-        elif len(str(lookup_id)) < 17:
-            raise Exception("Invalid Argument `id`. Please provide a valid Discord ID.")
+    if len(str(lookup_id)) < 17:
+        raise HelperError("Invalid Argument `id`. Please provide a valid Discord ID.")
 
-        response_embed, response_buttons = await api_request_handler(lookup_id)
-        response_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+    response_embed, response_buttons = await api_request_handler(lookup_id)
+    response_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
 
-        await ctx.reply(embed=response_embed, mention_author=False, view=response_buttons)
-    except Exception as Error:
-        embed_var = discord.Embed(
-            title="<:BloxlinkDead:823633973967716363> Error",
-            description=Error,
-            color=RED,
-        )
-        embed_var.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
-        embed_var.timestamp = datetime.now()
-
-        await ctx.reply(embed=embed_var)
+    await ctx.reply(embed=response_embed, mention_author=False, view=response_buttons)
 
 
 @discord.app_commands.context_menu(name="Bloxlink API Lookup")
 async def api_menu(interaction: discord.Interaction, user: discord.Member):
     if interaction.guild_id != BLOXLINK_GUILD:
-        await interaction.response.send_message(
-            content="This context menu only works in Bloxlink HQ!",
-            ephemeral=True,
-            allowed_mentions=discord.AllowedMentions(users=False),
-        )
-        return
+        raise HelperError("This context menu only works in Bloxlink HQ!")
 
     allowed_to_run = await is_staff_or_trial(interaction)
     if not allowed_to_run:
-        await interaction.response.send_message(
-            content="You are not allowed to use this context menu!",
-            ephemeral=True,
-            allowed_mentions=discord.AllowedMentions(users=False),
-        )
-        return
+        raise HelperError("You are not allowed to use this context menu!")
 
     response_embed, response_buttons = await api_request_handler(user.id)
     response_embed.set_footer(text="Bloxlink Helper", icon_url=interaction.user.display_avatar)
