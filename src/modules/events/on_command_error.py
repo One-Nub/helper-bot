@@ -98,7 +98,7 @@ async def on_command_error(ctx: Context, error: CommandError):
             # Lets us handle the original error if desired.
             match err.original:
                 case HelperError() as sub_err:
-                    error_embed.description = sub_err
+                    error_embed.description = str(sub_err)
 
                     await ctx.reply(
                         embed=error_embed,
