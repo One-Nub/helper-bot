@@ -92,7 +92,7 @@ async def on_command_error(ctx: Context, error: CommandError):
                     should_delete_original = False
 
         case _ as err:
-            error_embed.description = f"{sub_err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
+            error_embed.description = f"{err}\n\nAdditional Info:```{traceback.format_exc(chain=True)}```"
             should_delete_original = False
 
     # Send the error embed
@@ -108,4 +108,4 @@ async def on_command_error(ctx: Context, error: CommandError):
         await ctx.message.delete()
 
     if not should_delete_original:
-        raise err
+        raise error
