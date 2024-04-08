@@ -194,6 +194,8 @@ async def tag_info(ctx: Context, name: str = "0"):
     tag_author = tag["author"]
     tag_use_count = tag["use_count"]
     tag_created_at = tag["created_at"]
+    tag_updated_at = datetime.fromisoformat(tag.get("updated_at", tag_created_at))
+
     embed = discord.Embed(
         title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {tag['_id']}",
         description=f"**Content:** \n```{tag_content}```",
@@ -202,6 +204,7 @@ async def tag_info(ctx: Context, name: str = "0"):
     embed.add_field(name="Author", value=f"<@{tag_author}> ({tag_author})", inline=True)
     embed.add_field(name="Use Count", value=tag_use_count, inline=True)
     embed.add_field(name="Created At", value=tag_created_at, inline=True)
+    embed.add_field(name="Updated At", value=tag_updated_at.date(), inline=True)
 
     aliases = tag.get("aliases", [])
     if len(aliases) > 0:
