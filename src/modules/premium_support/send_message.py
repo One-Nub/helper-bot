@@ -1,12 +1,4 @@
-from discord import (
-    ButtonStyle,
-    Color,
-    Embed,
-    Interaction,
-    TextChannel,
-    app_commands,
-    ui,
-)
+from discord import ButtonStyle, Color, Embed, Interaction, TextChannel, app_commands, ui
 
 from resources.constants import BLURPLE
 from resources.helper_bot import instance as bot
@@ -33,7 +25,7 @@ async def send_premium_msg(interaction: Interaction, channel: TextChannel):
     embed: Embed = Embed(color=Color(BLURPLE))
     embed.description = (
         "### <:BloxlinkConfused:823633690910916619> Need some help with something related to Bloxlink?\n"
-        "Use the button below to open a private thread to get support and our staff team will get back "
+        "Use the button below to open a private thread to get support and our volunteer team will get back "
         "to you as soon as possible!"
     )
 
