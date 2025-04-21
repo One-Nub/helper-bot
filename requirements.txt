@@ -4,7 +4,7 @@ async-timeout==4.0.3
 attrs==23.1.0
 certifi==2023.7.22
 charset-normalizer==3.2.0
-discord-py==2.3.2
+discord-py==2.5.2
 dnspython==2.4.2
 frozenlist==1.4.0
 googletrans-py==4.0.0
