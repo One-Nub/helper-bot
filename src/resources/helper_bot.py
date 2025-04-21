@@ -1,5 +1,5 @@
-import importlib
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any, Literal, Optional, Type
 
@@ -9,6 +9,7 @@ from discord.app_commands import CommandTree
 from discord.ext import commands
 from motor import motor_asyncio
 
+from resources.constants import DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
 from resources.linear_api import LinearAPI
 
 instance: "HelperBot" = None
@@ -21,6 +22,7 @@ class HelperBot(commands.Bot):
         command_prefix: str,
         mongodb_url: str,
         linear_api_key: str,
+        modules: list[str],
         *,
         help_command: Optional[commands.HelpCommand] = None,
         tree_cls: Type[CommandTree] = CommandTree,
@@ -33,6 +35,8 @@ class HelperBot(commands.Bot):
         Args:
             command_prefix (str): Default prefix for chat commands.
             mongodb_url (str): URL to connect to MongoDB with.
+            linear_api_key (str): (TO BE REMOVED) API key to connect with Linear. Deprecated command/functionality.
+            modules (list[str]): Directories under src/modules that contain commands and cogs to be loaded by Discord.py.
             intents (discord.Intents): Intents for the bot.
             help_command (Optional[commands.HelpCommand], optional): See discord.py docs. Defaults to None.
             tree_cls (Type[CommandTree], optional): See discord.py docs. Defaults to CommandTree.
@@ -49,6 +53,8 @@ class HelperBot(commands.Bot):
             **options,
         )
 
+        self.modules = modules
+
         self.started_at = datetime.utcnow()
         self.button_handlers = {}
         if mongodb_url:
@@ -64,33 +70,50 @@ class HelperBot(commands.Bot):
         instance = self
 
     async def setup_hook(self):
-        # im lazy
-        await self.load_extension("modules.commands.linear")
+        # Load commands and cogs. Reads directories under "src/modules", specifically the ones
+        # passed as the "modules" parameter.
+        for module in self.modules:
+            path = os.path.join("src", "modules", module)
+
+            files = [
+                filename.removesuffix(".py")
+                for filename in os.listdir(path)
+                if filename.endswith(".py") and not filename.startswith("__init__")
+            ]
+
+            for file in files:
+                # Can't have "src." at the start of the path like when we got the files.
+                module_path = os.path.join("modules", module, file).replace("/", ".")
+
+                try:
+                    logger.info(f"Loading module {module_path}")
+                    # Use discord.py's "load_extension" method so our cogs work.
+                    await self.load_extension(module_path)
+                except commands.errors.NoEntryPointError:
+                    # Because of how we're registering commands as not-cogs but still loading them
+                    # with load_extension, DPY says this is "wrong". It can be fixed by adding a
+                    # setup function to each file that does nothing, but for now it will stay complaining since
+                    # the commands work as expected.
+                    logger.info(
+                        f"D.PY complained about a lack of entry point for {module_path}, "
+                        "but it's still loaded!"
+                    )
+
+        logging.info("Syncing slash commands...")
+        await self.tree.sync()
+
+        logging.info("Syncing guild commands...")
+        guilds_to_sync = {*DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD}
+        for guild in guilds_to_sync:
+            try:
+                await self.tree.sync(guild=discord.Object(guild))
+            except discord.Forbidden:
+                logging.warning(f"Could not sync guild commands for {guild}.")
 
     @property
     def uptime(self) -> timedelta:
         """The current uptime of the bot as a timedelta."""
-        return datetime.utcnow() - self.started_at
-
-    @staticmethod
-    def load_module(import_name: str) -> None:
-        """Loads a python module based on the import name
-
-        Args:
-            import_name (str): The name of the module to import.
-        """
-        try:
-            importlib.import_module(import_name)
-
-        except (ImportError, ModuleNotFoundError) as e:
-            logger.error(f"Failed to import {import_name}: {e}")
-            raise e
-
-        except Exception as e:
-            logger.error(f"Module {import_name} errored: {e}")
-            raise e
-
-        logger.info(f"Loaded module {import_name}")
+        return datetime.now(datetime.timezone.utc) - self.started_at
 
     def register_button_handler(self, custom_id_prefix: str):
         """Decorator to register a handler to handle a custom_id for a button.
