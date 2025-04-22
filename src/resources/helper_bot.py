@@ -292,7 +292,7 @@ class MongoDB:
            staff_id (int): The staff members user ID.
            msg_count (int): Number of messages the staff member has sent.
            staff_pos (str): The Staff members position.
-           tag_count (int, optional): Numer of tags the staff member has used.
+           tag_count (int, optional): Number of tags the staff member has used.
            updated_at (datetime, optional): Date of last message. Defaults to None.
         """
         data = {
