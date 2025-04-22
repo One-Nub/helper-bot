@@ -5,7 +5,7 @@ from discord import AllowedMentions, Intents, utils
 
 from resources.constants import MODULES
 from resources.helper_bot import HelperBot
-from resources.secrets import BOT_TOKEN, LINEAR_API_KEY, MONGO_URL  # pylint: disable=E0611
+from resources.secrets import BOT_TOKEN, LINEAR_API_KEY, MONGO_URL  # pylint: disable=E0611 # type: ignore
 
 utils.setup_logging(level=logging.INFO)
 
