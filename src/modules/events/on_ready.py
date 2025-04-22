@@ -12,4 +12,7 @@ async def on_ready():
         status=Status.online,
     )
 
-    logging.info(f"Bot ({bot.user.name}#{bot.user.discriminator}) has finished initializing!")
+    if bot.user:
+        logging.info(f"Bot ({bot.user.name}#{bot.user.discriminator}) has finished initializing!")
+    else:
+        logging.error("Bot is ready without being logged in. This is probably not intentional!")

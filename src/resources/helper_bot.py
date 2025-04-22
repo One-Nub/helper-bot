@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal, Optional, Type
 
 import certifi
@@ -55,7 +55,7 @@ class HelperBot(commands.Bot):
 
         self.modules = modules
 
-        self.started_at = datetime.utcnow()
+        self.started_at = datetime.now(timezone.utc)
         self.button_handlers = {}
         if mongodb_url:
             self.db = MongoDB(mongodb_url)
@@ -113,7 +113,7 @@ class HelperBot(commands.Bot):
     @property
     def uptime(self) -> timedelta:
         """The current uptime of the bot as a timedelta."""
-        return datetime.now(datetime.timezone.utc) - self.started_at
+        return datetime.now(timezone.utc) - self.started_at
 
     def register_button_handler(self, custom_id_prefix: str):
         """Decorator to register a handler to handle a custom_id for a button.
