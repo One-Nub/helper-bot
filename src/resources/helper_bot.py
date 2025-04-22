@@ -107,6 +107,7 @@ class HelperBot(commands.Bot):
         for guild in guilds_to_sync:
             try:
                 await self.tree.sync(guild=discord.Object(guild))
+                logging.info(f"Synced guild commands for {guild}.")
             except discord.Forbidden:
                 logging.warning(f"Could not sync guild commands for {guild}.")
 
