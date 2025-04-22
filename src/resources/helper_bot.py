@@ -12,7 +12,7 @@ from motor import motor_asyncio
 from resources.constants import DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
 from resources.linear_api import LinearAPI
 
-instance: "HelperBot" = None
+instance: "HelperBot" = None  # type: ignore
 logger = logging.getLogger()
 
 
@@ -174,12 +174,12 @@ class MongoDB:
     async def update_tag(
         self,
         name: str,
-        content: str = None,
-        aliases: list[str] = None,
-        author: str = None,
-        use_count: int = None,
-        created_at: datetime = None,
-        updated_at: datetime = None,
+        content: Optional[str] = None,
+        aliases: Optional[list[str]] = None,
+        author: Optional[str] = None,
+        use_count: Optional[int] = None,
+        created_at: Optional[datetime] = None,
+        updated_at: Optional[datetime] = None,
     ):
         """Insert or update a tag in the database based on its name or alias.
 
@@ -250,7 +250,12 @@ class MongoDB:
         }
         await self.db["tags"].delete_one(query)
 
-    async def set_log_channel(self, guild_id: str, premium_support: str = None, tag_updates: str = None):
+    async def set_log_channel(
+        self,
+        guild_id: str,
+        premium_support: Optional[str] = None,
+        tag_updates: Optional[str] = None,
+    ):
         """Set the log channel(s) in a guild
 
         Args:
@@ -278,8 +283,8 @@ class MongoDB:
         staff_id: int,
         msg_count: int,
         staff_pos: str,
-        tag_count: int = 0,
-        updated_at: datetime = None,
+        tag_count: Optional[int] = 0,
+        updated_at: Optional[datetime] = None,
     ):
         """Create a staff metric in the database
 
