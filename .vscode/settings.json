@@ -3,6 +3,7 @@
         "agelimit",
         "aiohttp",
         "asgi",
+        "autodelete",
         "Autoresponder",
         "blacksheep",
         "BLURPLE",
