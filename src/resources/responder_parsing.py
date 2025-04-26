@@ -1,7 +1,7 @@
 import re
 from enum import StrEnum
 
-from exceptions import InvalidTriggerFormat
+from src.resources.exceptions import InvalidTriggerFormat
 
 
 class SpecialChar(StrEnum):

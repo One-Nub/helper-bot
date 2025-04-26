@@ -23,6 +23,7 @@ textdistance = "^4.6.0"
 [tool.poetry.group.dev.dependencies]
 black = "^25.0.0"
 isort = "^6.0.0"
+pytest = "^8.3.5"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
@@ -37,3 +38,8 @@ profile = "black"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+filterwarnings = ["ignore:in 3.12 __contains__ will no longer raise TypeError"]
