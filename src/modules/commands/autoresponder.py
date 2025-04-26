@@ -15,12 +15,24 @@ Potential DB structure:
 - message
 - auto delete
 ---
-Would we want multi-string matching? Example, we could have "word" explicitly found, or a "phrase"
-But do we want something like discord's partial matching for safety rules, where we can add asterisks 
-I don't think I want to support regex, we don't really need that.
-I think when triggers are set, the whole string will be the "match", where asterisks will allow for 
-prefix or suffix matching - and if it's in the middle of a "string" its anything up until?
-Probably need to tokenize the strings.
+
+Special characters: 
+    * = prefix/suffix matching of a string
+    ... = large partial matching (so start-end and it would match "really start wow some random stuff end whee")
+        just represents "lots of content" between the start word and the end
+    , = splits trigger to different words that MUST uniquely exist in the string.
+
+cspell: disable
+Example valid triggers:
+    "verify"
+    "help pls" - must show up exactly as "help pls" in the message (case insensitive)
+    "ban*" - matches "ban", "banned", "banning", etc
+    "how...verify" (or "how ... verify") - matches "how verify", "how do i verify", "how john cena verify?", "how can i averify"
+        but not "verify how" or "verify pls how", nor "hob do i verbify"
+    "how, join" - matches "how do i join bloxlink", "how cna i join", but not "how can i joine", "join pls", "how play", "howjoin"
+
+Asterisks in the middle of phrases (i.e. "how*join") shall not be treated as partial matching options.
+cspell: enable
 """
 
 
@@ -41,6 +53,10 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         if message.author.bot:
             return
 
+    @app_commands.command(name="help", description="Learn how to use the command!")
+    async def syntax_info(self, ctx: discord.Interaction):
+        await ctx.response.send_message("placeholder")
+
     @app_commands.command(name="all", description="View all set automatic responses")
     async def view_all(self, ctx: discord.Interaction):
         await ctx.response.send_message("placeholder")
@@ -53,8 +69,8 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="add", description="Create an automatic response")
     @app_commands.describe(
         name="A unique admin-facing name for this responder",
-        triggers="Text that will trigger this response. Comma separated for multiple words, asterisks for partial matching",
-        autodelete="How long until the bot vaporizes the original message and response?",
+        triggers="Text that will trigger this response. Use the help subcommand to get syntax information.",
+        autodelete="How long (in seconds) until the bot vaporizes the original message and response?",
     )
     async def add_responder(
         self,
