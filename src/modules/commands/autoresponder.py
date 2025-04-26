@@ -44,7 +44,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         self.bot = bot
         super().__init__()
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:  # type: ignore[reportIncompatibleMessageOverride] fmt: skip
         return await is_staff(interaction)
 
     @commands.Cog.listener("on_message")
