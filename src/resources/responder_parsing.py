@@ -52,7 +52,9 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
     initial_trigger = initial_trigger.lower()
 
     trigger_segments = (
-        initial_trigger.split(SpecialChar.SPLIT) if SpecialChar.SPLIT in message else [initial_trigger]
+        initial_trigger.split(SpecialChar.SPLIT)
+        if SpecialChar.SPLIT in initial_trigger
+        else [initial_trigger]
     )
 
     scan_results = [scan_message(message=message, trigger=trigger) for trigger in trigger_segments]
