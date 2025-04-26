@@ -20,6 +20,8 @@ Special characters:
     * = prefix/suffix matching of a string
     ... = large partial matching (so start-end and it would match "really start wow some random stuff end whee")
         just represents "lots of content" between the start word and the end
+        ! cannot be used with prefix/suffix matching in the same trigger string.
+        ! cannot be used multiple times in one trigger string.
     , = splits trigger to different words that MUST uniquely exist in the string.
 
 cspell: disable
