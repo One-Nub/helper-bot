@@ -78,9 +78,21 @@ def test_split_trigger(trigger_str: str, expected):
         assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == e
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize(
     "trigger_str,expected",
-    [],
+    [
+        ("help", True),
+        ("banned", True),
+        ("BaNnEd", True),
+        ("I CAN'T VERIFY", True),
+        ("am I banned", True),
+        ("am I banned?", False),
+        ("I am banned", False),
+        ("Ban", False),
+        ("ban", False),
+        ("mess", False),
+        ("john cena", False),
+    ],
 )
-def test_absolute_trigger(trigger_str: str, expected): ...
+def test_absolute_trigger(trigger_str: str, expected):
+    assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == expected
