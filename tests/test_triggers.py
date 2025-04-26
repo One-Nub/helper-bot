@@ -35,28 +35,41 @@ def test_partial_trigger(trigger_str: str, expected):
         assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == e
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize(
     "trigger_str,expected",
     [
         ("verify...message", nullcontext(True)),
         ("verify ... need", nullcontext(True)),
-        ("need...verify", nullcontext(False)),
+        ("can't verify...message", nullcontext(True)),
+        ("can't verify...message saying", nullcontext(True)),
+        ("verify...message", nullcontext(True)),
+        ("account...need", nullcontext(False)),
         ("banned ... help", nullcontext(False)),
-        ("...", pytest.raises(InvalidTriggerFormat)),
+        ("ver* ... message", pytest.raises(InvalidTriggerFormat, match="Cannot perform partial")),
+        (
+            "verify ... message ... account",
+            pytest.raises(InvalidTriggerFormat, match="multiple times in a trigger string"),
+        ),
+        ("ver...", pytest.raises(InvalidTriggerFormat, match="Not enough strings found")),
+        ("... am i", pytest.raises(InvalidTriggerFormat, match="Not enough strings found")),
+        ("...", pytest.raises(InvalidTriggerFormat, match="only a special character")),
     ],
 )
-def test_expand_trigger(trigger_str: str, expected): ...
+def test_expand_trigger(trigger_str: str, expected):
+    with expected as e:
+        assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == e
 
 
 @pytest.mark.skip()
 @pytest.mark.parametrize(
     "trigger_str,expected",
     [
-        (",", pytest.raises(InvalidTriggerFormat)),
+        (",", pytest.raises(InvalidTriggerFormat, match="only a special character")),
     ],
 )
-def test_split_trigger(trigger_str: str, expected): ...
+def test_split_trigger(trigger_str: str, expected):
+    with expected as e:
+        assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == e
 
 
 @pytest.mark.skip()
