@@ -63,29 +63,13 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
 
 
 def scan_message(*, message: str, trigger: str) -> bool:
-    # Don't allow matching for the special characters by themselves.
-    if trigger in (x.value for x in SpecialChar):
-        # In Python 3.12 we can just do "if trigger in SpecialChar".
-        raise InvalidTriggerFormat("Cannot have a trigger that is only a special character.")
+    validate_trigger_string(trigger)
 
     # Handle expansion
     if SpecialChar.EXPAND in trigger:
-        if SpecialChar.PARTIAL in trigger:
-            raise InvalidTriggerFormat(f"Cannot perform partial matching with expansion.")
-
         # Splits & removes all empty strings found in the result (if any).
+        # We have already validated this will be successful (by the power of doing it twice! once above in validate_trigger_string)
         keywords: list[str] = [*filter(None, trigger.split(SpecialChar.EXPAND))]
-        if len(keywords) > 2:
-            raise InvalidTriggerFormat(
-                f'Cannot put "{SpecialChar.EXPAND}" multiple times in a trigger string.'
-            )
-
-        if len(keywords) <= 1:
-            raise InvalidTriggerFormat(
-                f"Not enough strings found after splitting over {SpecialChar.EXPAND}. "
-                f"Consider using {SpecialChar.PARTIAL} instead."
-            )
-
         start = keywords[0]
         end = keywords[-1]
 
@@ -127,3 +111,41 @@ def clean_trigger(trigger: str, *, regex_escape=False) -> str:
         trigger = re.escape(trigger)
 
     return trigger
+
+
+def validate_trigger_string(trigger: str) -> bool:
+    """Validate if a trigger string is to be accepted. True on approval, InvalidTriggerFormat otherwise."""
+
+    # Preemptively catch SpecialChar strings.
+    if trigger in (x.value for x in SpecialChar):
+        # In Python 3.12 we can just do "if trigger in SpecialChar".
+        raise InvalidTriggerFormat("Cannot have a trigger that is only a special character.")
+
+    trigger_segments = trigger.split(SpecialChar.SPLIT) if SpecialChar.SPLIT in trigger else [trigger]
+    for trig in trigger_segments:
+        # Checking again since here is after we split on commas.
+        if trig in (x.value for x in SpecialChar):
+            # In Python 3.12 we can just do "if trigger in SpecialChar".
+            raise InvalidTriggerFormat("Cannot have a trigger that is only a special character.")
+
+        # Handle expansion
+        if SpecialChar.EXPAND in trig:
+            if SpecialChar.PARTIAL in trig:
+                raise InvalidTriggerFormat(
+                    f"Cannot perform partial matching with expansion in the same segment."
+                )
+
+            # Splits & removes all empty strings found in the result (if any).
+            keywords: list[str] = [*filter(None, trig.split(SpecialChar.EXPAND))]
+            if len(keywords) > 2:
+                raise InvalidTriggerFormat(
+                    f'Cannot put "{SpecialChar.EXPAND}" multiple times in a trigger string.'
+                )
+
+            if len(keywords) <= 1:
+                raise InvalidTriggerFormat(
+                    f"Not enough strings found after splitting over {SpecialChar.EXPAND}. "
+                    f"Consider using {SpecialChar.PARTIAL} instead."
+                )
+
+    return True
