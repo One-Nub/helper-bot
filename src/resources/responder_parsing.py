@@ -5,12 +5,49 @@ from exceptions import InvalidTriggerFormat
 
 
 class SpecialChar(StrEnum):
+    """Special characters that can be used for a trigger string."""
+
     PARTIAL = "*"
+    """Enables prefix/suffix pattern matching for a given string.
+
+    Only works when at the beginning or ending of a string, placement elsewhere is ignored.
+
+    CANNOT BE USED IN CONJUNCTION WITH SpecialChar.EXPAND
+    """
+
     EXPAND = "..."
+    """Equivalent of regex wildcard. Matches anything between two strings.
+
+    Beginning and ending strings are treated as substrings in the context of the larger message.
+
+    CANNOT BE USED IN CONJUNCTION WITH SpecialChar.PARTIAL \n
+    CANNOT BE USED MULTIPLE TIMES IN ONE TRIGGER STRING
+    """
+
     SPLIT = ","
+    """Splits a single trigger string into unique matchers.
+
+    All sub-matchers must be True for a match to be made.
+
+    Other SpecialChar strings are supported as part of the unique matcher segments.
+
+    Examples:
+        "hello, world" - requires that both words "hello" and "world" appear.
+        "ban*, game" - requires a word with a prefix of "ban-", and "game" in the message.
+        "we ... farmers", dum" - would match "we are farmers bum ba dum ba dum dum dum"
+    """
 
 
-def search_message_match(*, message: str, initial_trigger: str):
+def search_message_match(*, message: str, initial_trigger: str) -> bool:
+    """Search a message for a matching substring or trigger formatted string.
+
+    Args:
+        message (str): _description_
+        initial_trigger (str): Given string to search for. Behavior changes based on presence of SpecialChar(s).
+
+    Returns:
+        bool: If the given trigger string found a match.
+    """
     message = message.lower()
     initial_trigger = initial_trigger.lower()
 
