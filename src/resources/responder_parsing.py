@@ -71,7 +71,8 @@ def scan_message(*, message: str, trigger: str) -> bool:
         if SpecialChar.PARTIAL in trigger:
             raise InvalidTriggerFormat(f"Cannot perform partial matching with expansion.")
 
-        keywords: list[str] = trigger.split(SpecialChar.EXPAND)
+        # Splits & removes all empty strings found in the result (if any).
+        keywords: list[str] = [*filter(None, trigger.split(SpecialChar.EXPAND))]
         if len(keywords) > 2:
             raise InvalidTriggerFormat(
                 f'Cannot put "{SpecialChar.EXPAND}" multiple times in a trigger string.'
