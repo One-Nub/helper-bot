@@ -41,6 +41,12 @@ def scan_message(*, message: str, trigger: str) -> bool:
                 f'Cannot put "{SpecialChar.EXPAND}" multiple times in a trigger string.'
             )
 
+        if len(keywords) <= 1:
+            raise InvalidTriggerFormat(
+                f"Not enough strings found after splitting over {SpecialChar.EXPAND}. "
+                f"Consider using {SpecialChar.PARTIAL} instead."
+            )
+
         start = keywords[0]
         end = keywords[-1]
 
