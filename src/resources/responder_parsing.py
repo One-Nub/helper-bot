@@ -93,13 +93,14 @@ def scan_message(*, message: str, trigger: str) -> bool:
     if trigger.startswith(SpecialChar.PARTIAL) and trigger.endswith(SpecialChar.PARTIAL):
         return trigger[1:-1] in message
 
+    # Had to use regex for everything 😔, darn substring matching edge cases that would be horrible to do otherwise
     if trigger.startswith(SpecialChar.PARTIAL):
-        find_result = message.find(trigger[1:])
-        return find_result == -1
+        # enforces white space or end of message at end of match
+        return re.search(rf"{trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
 
     if trigger.endswith(SpecialChar.PARTIAL):
-        find_result = message.find(trigger[:-1])
-        return find_result == -1
+        # enforces white space or start of message at start of match
+        return re.search(rf"(\s+|^){trigger}", message, re.IGNORECASE | re.MULTILINE) is not None
 
     # Absolute string matching (no substrings)
-    return re.search(rf"(^|\s+){trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
+    return re.search(rf"(\s+|^){trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
