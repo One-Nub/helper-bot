@@ -57,12 +57,12 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
         else [initial_trigger]
     )
 
-    scan_results = [scan_message(message=message, trigger=trigger.strip()) for trigger in trigger_segments]
+    scan_results = [_scan_message(message=message, trigger=trigger.strip()) for trigger in trigger_segments]
 
     return all(scan_results)
 
 
-def scan_message(*, message: str, trigger: str) -> bool:
+def _scan_message(*, message: str, trigger: str) -> bool:
     validate_trigger_string(trigger)
 
     # Handle expansion
@@ -77,28 +77,28 @@ def scan_message(*, message: str, trigger: str) -> bool:
 
     # Check for partial matching.
     if trigger.startswith(SpecialChar.PARTIAL) and trigger.endswith(SpecialChar.PARTIAL):
-        return clean_trigger(trigger) in message
+        return _clean_trigger(trigger) in message
 
     # Had to use regex for everything 😔, darn substring matching edge cases that would be horrible to do otherwise
     if trigger.startswith(SpecialChar.PARTIAL):
-        trigger = clean_trigger(trigger, regex_escape=True)
+        trigger = _clean_trigger(trigger, regex_escape=True)
 
         # enforces white space or end of message at end of match
         return re.search(rf"{trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
 
     if trigger.endswith(SpecialChar.PARTIAL):
-        trigger = clean_trigger(trigger, regex_escape=True)
+        trigger = _clean_trigger(trigger, regex_escape=True)
 
         # enforces white space or start of message at start of match
         return re.search(rf"(\s+|^){trigger}", message, re.IGNORECASE | re.MULTILINE) is not None
 
     # Absolute string matching (no substrings)
     # Clean in case there are special characters to be literally searched for.
-    trigger = clean_trigger(trigger, regex_escape=True)
+    trigger = _clean_trigger(trigger, regex_escape=True)
     return re.search(rf"(\s+|^){trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
 
 
-def clean_trigger(trigger: str, *, regex_escape=False) -> str:
+def _clean_trigger(trigger: str, *, regex_escape=False) -> str:
     """Removes asterisks and leading+trailing white space. Optionally escapes regex special characters."""
     if trigger.startswith(SpecialChar.PARTIAL):
         trigger = trigger[1:]
