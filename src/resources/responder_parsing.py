@@ -57,7 +57,7 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
         else [initial_trigger]
     )
 
-    scan_results = [scan_message(message=message, trigger=trigger) for trigger in trigger_segments]
+    scan_results = [scan_message(message=message, trigger=trigger.strip()) for trigger in trigger_segments]
 
     return all(scan_results)
 
