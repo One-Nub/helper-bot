@@ -64,7 +64,8 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
 
 def scan_message(*, message: str, trigger: str) -> bool:
     # Don't allow matching for the special characters by themselves.
-    if trigger in SpecialChar:
+    if trigger in (x.value for x in SpecialChar):
+        # In Python 3.12 we can just do "if trigger in SpecialChar".
         raise InvalidTriggerFormat("Cannot have a trigger that is only a special character.")
 
     # Handle expansion
@@ -96,11 +97,11 @@ def scan_message(*, message: str, trigger: str) -> bool:
     # Had to use regex for everything 😔, darn substring matching edge cases that would be horrible to do otherwise
     if trigger.startswith(SpecialChar.PARTIAL):
         # enforces white space or end of message at end of match
-        return re.search(rf"{trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
+        return re.search(rf"{trigger[1:]}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
 
     if trigger.endswith(SpecialChar.PARTIAL):
         # enforces white space or start of message at start of match
-        return re.search(rf"(\s+|^){trigger}", message, re.IGNORECASE | re.MULTILINE) is not None
+        return re.search(rf"(\s+|^){trigger[:-1]}", message, re.IGNORECASE | re.MULTILINE) is not None
 
     # Absolute string matching (no substrings)
     return re.search(rf"(\s+|^){trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
