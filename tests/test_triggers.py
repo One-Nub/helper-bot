@@ -60,11 +60,17 @@ def test_expand_trigger(trigger_str: str, expected):
         assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == e
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize(
     "trigger_str,expected",
     [
-        (",", pytest.raises(InvalidTriggerFormat, match="only a special character")),
+        ("help, verify", nullcontext(True)),
+        ("account, verify", nullcontext(True)),
+        ("ban*, help", nullcontext(True)),
+        ("help, verify", nullcontext(True)),
+        ("help, verify", nullcontext(True)),
+        ("help...verify, *count", nullcontext(True)),
+        ("help...verify, bloxlink", nullcontext(False)),
+        ("help, bloxlink", nullcontext(False)),
     ],
 )
 def test_split_trigger(trigger_str: str, expected):
