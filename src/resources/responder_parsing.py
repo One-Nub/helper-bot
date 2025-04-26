@@ -59,4 +59,4 @@ def scan_message(*, message: str, trigger: str) -> bool:
         return find_result == -1
 
     # Absolute string matching (no substrings)
-    return re.search(rf"(^|\s+){trigger}\s+|$", message, re.IGNORECASE | re.MULTILINE) is not None
+    return re.search(rf"(^|\s+){trigger}(\s+|$)", message, re.IGNORECASE | re.MULTILINE) is not None
