@@ -47,9 +47,6 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         return await is_staff(interaction)
 
-    async def cog_check(self, ctx: commands.Context) -> bool:
-        return await is_staff(ctx)
-
     @commands.Cog.listener("on_message")
     async def message_handler(self, message: discord.Message):
         if message.author.bot:
