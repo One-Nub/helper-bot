@@ -362,3 +362,83 @@ class MongoDB:
             log_type ("Literal['premium_support', 'tag_updates']"): The type of log to remove from the database.
         """
         await self.db["config"].update_one({"_id": str(guild_id)}, update={"$unset": {log_type: ""}})
+
+    ####
+    ####################---------AUTO RESPONDER METHODS-----------########################
+    ####
+    async def update_autoresponse(
+        self,
+        name: str,
+        response_message: Optional[str] = None,
+        message_triggers: Optional[list[str]] = None,
+        author: Optional[str] = None,
+        auto_deletion: Optional[int] = None,
+    ):
+        """Insert or update an auto responder in the database based on its name.
+
+        Only updates values based on what you give it, example if you don't include auto_deletion
+        it will not modify it.
+
+        Args:
+            name (str): Name of the auto response trigger that should be updated.
+            response_message (str): The message that will be sent in response to a given trigger message.
+            message_triggers (list[str], optional): Strings that will result in the response_message being sent.
+                KEY NOTE: MUST BE AN EXHAUSTIVE LIST OF *ALL* TRIGGER STRINGS FOR THIS TAG.
+            author (str, optional): ID of the author. Defaults to None.
+            auto_deletion (int, optional): Time that will be waited until the messages by the author and the bot are removed.
+        """
+        name = name.lower()
+        data = {}
+
+        if response_message is not None:
+            data["response_message"] = str(response_message)
+
+        if message_triggers is not None:
+            data["message_triggers"] = message_triggers
+
+        if author is not None:
+            data["author"] = str(author)
+
+        if auto_deletion is not None:
+            data["auto_deletion"] = auto_deletion
+
+        if not data:
+            logger.warning(f"No data was found when updating the auto response {name}.")
+            return
+
+        await self.db["auto_response"].update_one(
+            filter={"_id": name},
+            update={"$set": data, "$setOnInsert": {"_id": name}},
+            upsert=True,
+        )
+
+    async def get_all_autoresponses(self) -> list:
+        """Return a list of all the auto responses in the database.
+
+        Returns:
+            list: List of the auto responses, each response is a dictionary.
+        """
+        cursor = self.db["auto_response"].find()
+        return await cursor.to_list(None)
+
+    async def get_autoresponse(self, name: str) -> dict | None:
+        """Get a single auto response from the database
+
+        Args:
+            name (str): The name of the auto response to find.
+
+        Returns:
+            dict | None: The response data if it exists, otherwise None.
+        """
+        name = name.lower()
+        cursor = await self.db["tags"].find_one({"_id": name})
+        return cursor
+
+    async def delete_autoresponse(self, name: str):
+        """Removes an auto responder from the database based on the given name.
+
+        Args:
+            name (str): The name of the auto responder.
+        """
+        name = name.lower()
+        await self.db["auto_response"].delete_one({"_id": name})
