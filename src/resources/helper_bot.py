@@ -143,6 +143,9 @@ class MongoDB:
         self.db = self.client["bloxlink_helper"]
         logger.info("MongoDB initialized.")
 
+    ####
+    ####################---------TAG METHODS-----------########################
+    ####
     async def get_all_tags(self) -> list:
         """Return a list of all the tags in the database.
 
@@ -251,34 +254,9 @@ class MongoDB:
         }
         await self.db["tags"].delete_one(query)
 
-    async def set_log_channel(
-        self,
-        guild_id: str,
-        premium_support: Optional[str] = None,
-        tag_updates: Optional[str] = None,
-    ):
-        """Set the log channel(s) in a guild
-
-        Args:
-            guild_id (str): The guild to set the log channels in.
-            premium_support (str, optional): Channel to send logs of open support tickets to. Defaults to None.
-            tag_updates (str, optional): Channel to send logs of tags being updated to. Defaults to None.
-        """
-        data = {}
-        if premium_support is not None:
-            data["premium_support"] = premium_support
-        if tag_updates is not None:
-            data["tag_updates"] = tag_updates
-
-        if not data:
-            return
-
-        await self.db["config"].update_one(
-            {"_id": str(guild_id)},
-            update={"$set": data},
-            upsert=True,
-        )
-
+    ####
+    ####################---------STAFF METRIC METHODS-----------########################
+    ####
     async def update_staff_metric(
         self,
         staff_id: int,
@@ -339,6 +317,37 @@ class MongoDB:
         """
         cursor = self.db["metrics"].find({"staff_pos": "Trial"})
         return await cursor.to_list(None)
+
+    ####
+    ####################---------LOG CHANNEL METHODS-----------########################
+    ####
+    async def set_log_channel(
+        self,
+        guild_id: str,
+        premium_support: Optional[str] = None,
+        tag_updates: Optional[str] = None,
+    ):
+        """Set the log channel(s) in a guild
+
+        Args:
+            guild_id (str): The guild to set the log channels in.
+            premium_support (str, optional): Channel to send logs of open support tickets to. Defaults to None.
+            tag_updates (str, optional): Channel to send logs of tags being updated to. Defaults to None.
+        """
+        data = {}
+        if premium_support is not None:
+            data["premium_support"] = premium_support
+        if tag_updates is not None:
+            data["tag_updates"] = tag_updates
+
+        if not data:
+            return
+
+        await self.db["config"].update_one(
+            {"_id": str(guild_id)},
+            update={"$set": data},
+            upsert=True,
+        )
 
     async def get_log_channels(self, guild_id: str):
         """Get all the log channels in a guild"""
