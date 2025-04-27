@@ -52,8 +52,12 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         if message.author.bot:
             return
 
+    ####
+    ####################---------BASE COMMANDS-----------########################
+    ####
+
     @app_commands.command(name="help", description="Learn how to use the command!")
-    async def syntax_info(self, ctx: discord.Interaction):
+    async def command_help(self, ctx: discord.Interaction):
         await ctx.response.send_message("placeholder")
 
     @app_commands.command(name="all", description="View all set automatic responses")
@@ -65,7 +69,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     async def view_single(self, ctx: discord.Interaction, name: str):
         await ctx.response.send_message(f"placeholder with name {name}")
 
-    @app_commands.command(name="add", description="Create an automatic response")
+    @app_commands.command(name="create", description="Create an automatic response")
     @app_commands.describe(
         name="A unique admin-facing name for this responder",
         triggers="Text that will trigger this response. Use the help subcommand to get syntax information.",
@@ -84,6 +88,52 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.describe(name="The admin-facing name for the responder")
     async def delete_responder(self, ctx: discord.Interaction, name: str):
         await ctx.response.send_message(f"placeholder with name {name}")
+
+    ####
+    ####################---------REPLY MESSAGE COMMANDS-----------########################
+    ####
+
+    message_group = app_commands.Group(name="message", description="Manage responder messages.")
+
+    @message_group.command(
+        name="raw", description="View raw string of what the response is for the given responder."
+    )
+    async def message_raw(self, ctx: discord.Interaction, name: str):
+        pass
+
+    @message_group.command(
+        name="edit", description="Change what message is sent as a reply for the given responder."
+    )
+    async def message_edit(self, ctx: discord.Interaction, name: str):
+        pass
+
+    ####
+    ####################---------MESSAGE TRIGGER COMMANDS-----------########################
+    ####
+
+    trigger_group = app_commands.Group(name="trigger", description="Manage triggers for auto responders.")
+
+    @trigger_group.command(name="add", description="Add an additional message string to respond to.")
+    async def trigger_add(self, ctx: discord.Interaction, name: str, trigger: str):
+        pass
+
+    @trigger_group.command(name="delete", description="Remove a message string that is responded to.")
+    async def trigger_del(self, ctx: discord.Interaction, name: str):
+        pass
+
+    ####
+    ####################---------AUTO DELETION COMMANDS-----------########################
+    ####
+
+    autodelete_group = app_commands.Group(
+        name="autodelete", description="Manage deletion timeout for auto responders."
+    )
+
+    @trigger_group.command(
+        name="edit", description="Set time in seconds for the OG message and reply to vanish. 0 to unset."
+    )
+    async def autodelete_edit(self, ctx: discord.Interaction, name: str, duration: int):
+        pass
 
 
 async def setup(bot: HelperBot):
