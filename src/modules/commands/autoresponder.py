@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional
 
 import discord
@@ -7,6 +8,7 @@ from discord.ext import commands
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
+from resources.constants import BLURPLE
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 
@@ -131,7 +133,41 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="view", description="View a specific automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
     async def view_single(self, ctx: discord.Interaction, name: str):
-        await ctx.response.send_message(f"placeholder with name {name}")
+        if type(ctx.client) is not HelperBot:
+            logging.error("Client wasn't the same as the main instance.")
+            return
+
+        responder = await ctx.client.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"Could not find the responder associated with the name `{name}`!",
+                ephemeral=True,
+            )
+
+        embed = discord.Embed()
+        embed.timestamp = datetime.now()
+        embed.color = BLURPLE
+        embed.title = f":BloxlinkHappy: Auto Responder Info: {name}"
+
+        trigger_strings = [f"`{trigger_str}`" for trigger_str in responder.get("message_triggers", [])]
+        final_trigger_string = ", ".join(trigger_strings)
+
+        embed.add_field(name="Trigger Strings", value=final_trigger_string, inline=False)
+        embed.add_field(name="Response", value=f"```{responder.get('response_message')}```", inline=False)
+        embed.add_field(
+            name="Auto Delete",
+            value=(
+                "Message does not auto delete."
+                if (rd := responder.get("auto_deletion", 0)) == 0
+                else f"After `{rd}` seconds"
+            ),
+        )
+
+        author_id = responder.get("author")
+        embed.add_field(name="Author", value=f"<@{author_id}> ({author_id})")
+        embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
+
+        return await ctx.response.send_message(embed=embed)
 
     @app_commands.command(name="create", description="Create an automatic response")
     @app_commands.describe(
