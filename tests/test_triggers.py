@@ -2,8 +2,8 @@ from contextlib import nullcontext
 
 import pytest
 
-import src.resources.responder_parsing as tr
-from src.resources.exceptions import InvalidTriggerFormat
+import resources.responder_parsing as tr
+from resources.exceptions import InvalidTriggerFormat
 
 BASE_MESSAGE = (
     "help I can't verify every time i try i get a message saying you need to verify your account am i banned"

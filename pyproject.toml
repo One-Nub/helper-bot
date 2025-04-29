@@ -43,3 +43,5 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
 filterwarnings = ["ignore:in 3.12 __contains__ will no longer raise TypeError"]
+pythonpath = ["src"]
+testpaths = ["tests"]
