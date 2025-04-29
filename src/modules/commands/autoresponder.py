@@ -240,7 +240,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name="autodelete", description="Manage deletion timeout for auto responders."
     )
 
-    @trigger_group.command(
+    @autodelete_group.command(
         name="edit", description="Set time in seconds for the OG message and reply to vanish. 0 to unset."
     )
     async def autodelete_edit(self, ctx: discord.Interaction, name: str, duration: int):
