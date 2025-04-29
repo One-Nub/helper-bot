@@ -432,7 +432,7 @@ class MongoDB:
             dict | None: The response data if it exists, otherwise None.
         """
         name = name.lower()
-        cursor = await self.db["tags"].find_one({"_id": name})
+        cursor = await self.db["auto_response"].find_one({"_id": name})
         return cursor
 
     async def delete_autoresponse(self, name: str):
