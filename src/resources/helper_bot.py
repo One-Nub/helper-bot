@@ -399,7 +399,8 @@ class MongoDB:
         if author is not None:
             data["author"] = str(author)
 
-        if auto_deletion is not None:
+        if auto_deletion is not None and auto_deletion > 0:
+            # Only set if it is above 0.
             data["auto_deletion"] = auto_deletion
 
         if not data:
