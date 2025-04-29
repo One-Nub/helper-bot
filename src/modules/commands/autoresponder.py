@@ -218,7 +218,21 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name="raw", description="View raw string of what the response is for the given responder."
     )
     async def message_raw(self, ctx: discord.Interaction, name: str):
-        pass
+        if type(ctx.client) is not HelperBot:
+            logging.error("Client wasn't the same as the main instance.")
+            return
+
+        responder = await ctx.client.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"Could not find the responder associated with the name `{name}`! No changes were made.",
+                ephemeral=True,
+            )
+        ar = AutoResponse.from_database(responder)
+
+        return await ctx.response.send_message(
+            f"### Raw Message Content for `{ar.name}`\n```{ar.response_message}```"
+        )
 
     @message_group.command(
         name="edit", description="Change what message is sent as a reply for the given responder."
