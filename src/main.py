@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import logging
 
@@ -8,6 +9,10 @@ from resources.helper_bot import HelperBot
 from resources.secrets import BOT_TOKEN, LINEAR_API_KEY, MONGO_URL  # pylint: disable=E0611 # type: ignore
 
 utils.setup_logging(level=logging.INFO)
+
+parser = argparse.ArgumentParser(prog="helper-bot")
+parser.add_argument("-ns", "--no-sync", action="store_true")
+args = parser.parse_args()
 
 
 async def main():
@@ -21,6 +26,7 @@ async def main():
         allowed_mentions=allowed_mentions,
         linear_api_key=LINEAR_API_KEY,
         modules=MODULES,
+        sync_commands=(not args.no_sync),
     )
 
     await bot.start(token=BOT_TOKEN)

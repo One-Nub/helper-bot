@@ -28,6 +28,7 @@ class HelperBot(commands.Bot):
         tree_cls: Type[CommandTree] = CommandTree,
         description: Optional[str] = None,
         intents: discord.Intents,
+        sync_commands: bool = True,
         **options: Any,
     ) -> None:
         """Initialize the Helper Bot class.
@@ -43,6 +44,8 @@ class HelperBot(commands.Bot):
             description (Optional[str], optional): See discord.py docs. Defaults to None.
         """
         global instance
+
+        self.sync_commands = sync_commands
 
         super().__init__(
             command_prefix,
@@ -99,17 +102,20 @@ class HelperBot(commands.Bot):
                         "but it's still loaded!"
                     )
 
-        logging.info("Syncing slash commands...")
-        await self.tree.sync()
+        if self.sync_commands:
+            logging.info("Syncing slash commands...")
+            await self.tree.sync()
 
-        logging.info("Syncing guild commands...")
-        guilds_to_sync = {*DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD}
-        for guild in guilds_to_sync:
-            try:
-                await self.tree.sync(guild=discord.Object(guild))
-                logging.info(f"Synced guild commands for {guild}.")
-            except discord.Forbidden:
-                logging.warning(f"Could not sync guild commands for {guild}.")
+            logging.info("Syncing guild commands...")
+            guilds_to_sync = {*DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD}
+            for guild in guilds_to_sync:
+                try:
+                    await self.tree.sync(guild=discord.Object(guild))
+                    logging.info(f"Synced guild commands for {guild}.")
+                except discord.Forbidden:
+                    logging.warning(f"Could not sync guild commands for {guild}.")
+        else:
+            logging.warning("Commands were not synced with Discord.")
 
     @property
     def uptime(self) -> timedelta:
