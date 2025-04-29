@@ -152,7 +152,24 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="delete", description="Remove an automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
     async def delete_responder(self, ctx: discord.Interaction, name: str):
-        await ctx.response.send_message(f"placeholder with name {name}")
+        if type(ctx.client) is not HelperBot:
+            logging.error("Client wasn't the same as the main instance.")
+            return
+
+        responder = await ctx.client.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"Could not find the responder associated with the name `{name}`! No changes were made.",
+                ephemeral=True,
+            )
+
+        await ctx.client.db.delete_autoresponse(name=name)
+        await ctx.response.send_message(
+            f"Success! The responder associated with the name `{name}` was removed."
+            f"\n**Previous Content**:"
+            f"\n>>> __Trigger Strings:__ ```{responder.get('message_triggers')}```"
+            f"\n__Message__:```{responder.get('response_message')}```"
+        )
 
     ####
     ####################---------REPLY MESSAGE COMMANDS-----------########################
