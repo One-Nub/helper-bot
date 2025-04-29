@@ -89,7 +89,6 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             message_triggers=[self.trigger_string.value],
             auto_deletion=auto_delete,
         )
-        ar.embed.set_footer(text="Bloxlink Helper", icon_url=interaction.user.display_avatar)
 
         # TODO: Improve message (use embed)
         await interaction.response.send_message(
@@ -97,7 +96,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
                 f"Success! Your new auto responder has been saved.\n"
                 "*If you want to add more trigger strings, use `/autoresponder trigger add`*"
             ),
-            embed=ar.embed,
+            embed=ar.embed.set_footer(text="Bloxlink Helper", icon_url=interaction.user.display_avatar),
         )
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
@@ -155,9 +154,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         ar: AutoResponse = AutoResponse.from_database(responder)
 
-        ar.embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
-
-        return await ctx.response.send_message(embed=ar.embed, content=ar)
+        return await ctx.response.send_message(
+            embed=ar.embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
+        )
 
     @app_commands.command(name="create", description="Create an automatic response")
     @app_commands.describe(
