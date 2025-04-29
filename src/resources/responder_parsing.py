@@ -126,27 +126,30 @@ def validate_trigger_string(trigger: str) -> bool:
         # Checking again since here is after we split on commas.
         if trig in (x.value for x in SpecialChar):
             # In Python 3.12 we can just do "if trigger in SpecialChar".
-            raise InvalidTriggerFormat("Cannot have a trigger that is only a special character.")
+            raise InvalidTriggerFormat(
+                "Cannot have a trigger that is only a special character "
+                f"(`{SpecialChar.SPLIT}`, `{SpecialChar.EXPAND}`, `{SpecialChar.PARTIAL}`)."
+            )
 
         # Handle expansion
         if SpecialChar.EXPAND in trig:
             if SpecialChar.PARTIAL in trig:
                 raise InvalidTriggerFormat(
-                    f"Cannot perform partial matching ({SpecialChar.PARTIAL}) with "
-                    f"expansion ({SpecialChar.EXPAND}) in the same segment."
+                    f"Cannot perform partial matching (`{SpecialChar.PARTIAL}`) with "
+                    f"expansion (`{SpecialChar.EXPAND}`) in the same segment."
                 )
 
             # Splits & removes all empty strings found in the result (if any).
             keywords: list[str] = [*filter(None, trig.split(SpecialChar.EXPAND))]
             if len(keywords) > 2:
                 raise InvalidTriggerFormat(
-                    f'Cannot put "{SpecialChar.EXPAND}" multiple times in a trigger string.'
+                    f"Cannot put `{SpecialChar.EXPAND}` multiple times in a trigger string."
                 )
 
             if len(keywords) <= 1:
                 raise InvalidTriggerFormat(
-                    f"Not enough strings found after splitting over {SpecialChar.EXPAND}. "
-                    f"Consider using {SpecialChar.PARTIAL} instead."
+                    f"Not enough strings found after splitting over `{SpecialChar.EXPAND}`. "
+                    f"Consider using `{SpecialChar.PARTIAL}` instead."
                 )
 
     return True
