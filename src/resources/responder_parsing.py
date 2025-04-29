@@ -1,7 +1,7 @@
 import re
 from enum import StrEnum
 
-from src.resources.exceptions import InvalidTriggerFormat
+from resources.exceptions import InvalidTriggerFormat
 
 
 class SpecialChar(StrEnum):
@@ -132,7 +132,8 @@ def validate_trigger_string(trigger: str) -> bool:
         if SpecialChar.EXPAND in trig:
             if SpecialChar.PARTIAL in trig:
                 raise InvalidTriggerFormat(
-                    f"Cannot perform partial matching with expansion in the same segment."
+                    f"Cannot perform partial matching ({SpecialChar.PARTIAL}) with "
+                    f"expansion ({SpecialChar.EXPAND}) in the same segment."
                 )
 
             # Splits & removes all empty strings found in the result (if any).
