@@ -19,6 +19,7 @@ certifi = "^2025"
 psutil = "^7.0.0"
 googletrans-py = "4.0.0"
 textdistance = "^4.6.0"
+attrs = "^25.3.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.0.0"
