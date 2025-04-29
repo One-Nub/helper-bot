@@ -7,6 +7,7 @@ from discord.ext import commands
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
+from resources.constants import RED
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 from resources.models.autoresponse import AutoResponse
@@ -188,13 +189,15 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 f"Could not find the responder associated with the name `{name}`! No changes were made.",
                 ephemeral=True,
             )
+        ar = AutoResponse.from_database(responder)
+        embed = ar.embed
+        embed.title = ":BloxlinkDab: Deleted Auto Responder Content"
+        embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
+        embed.color = RED
 
         await ctx.client.db.delete_autoresponse(name=name)
         await ctx.response.send_message(
-            f"Success! The responder associated with the name `{name}` was removed."
-            f"\n**Previous Content**:"
-            f"\n>>> __Trigger Strings:__ ```{responder.get('message_triggers')}```"
-            f"\n__Message__:```{responder.get('response_message')}```"
+            f"Success! The responder associated with the name `{name}` was removed.", embed=embed
         )
 
     ####
