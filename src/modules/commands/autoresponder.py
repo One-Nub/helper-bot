@@ -62,15 +62,23 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
 
         author_id = custom_data[0]
         responder_name = custom_data[1]
-        auto_delete = custom_data[2]
+        auto_delete = int(custom_data[2])
 
         resp_parsing.validate_trigger_string(self.trigger_string.value)
 
-        # TODO: Save to database. Update in-app cache? If we add that?
-        # Add helper method to find auto responder? - then we can use functools.lru_cache on that.
-        # Would clear the cache each time an auto responder is added.
-        # Really, I think we just need a cache of known valid triggers (and maybe their replies too), that way
-        # we're not spamming the db (even more) every time the bot sees a message 🤷‍♂️
+        if type(interaction.client) is not HelperBot:
+            logging.error("Client wasn't the same as the main instance.")
+            return
+
+        # TODO: If caching is added, clear the cache. Or update with added trigger. functools.lru_cache
+        bot: HelperBot = interaction.client
+        await bot.db.update_autoresponse(
+            responder_name,
+            response_message=self.response_msg.value,
+            message_triggers=[self.trigger_string.value],
+            author=author_id,
+            auto_deletion=auto_delete,
+        )
 
         await interaction.response.send_message(
             f"User {author_id} created the responder of {responder_name} "
