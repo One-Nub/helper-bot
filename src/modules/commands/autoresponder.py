@@ -82,13 +82,22 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             auto_deletion=auto_delete,
         )
 
+        ar = AutoResponse(
+            name=responder_name,
+            response_message=self.response_msg.value,
+            author=author_id,
+            message_triggers=[self.trigger_string.value],
+            auto_deletion=auto_delete,
+        )
+        ar.embed.set_footer(text="Bloxlink Helper", icon_url=interaction.user.display_avatar)
+
         # TODO: Improve message (use embed)
         await interaction.response.send_message(
-            f"User {author_id} created the responder of {responder_name} "
-            f"with trigger string {self.trigger_string.value} "
-            "and content of ```"
-            f"{self.response_msg.value}```"
-            f"and will delete itself after {auto_delete} seconds."
+            (
+                f"Success! Your new auto responder has been saved.\n"
+                "*If you want to add more trigger strings, use `/autoresponder trigger add`*"
+            ),
+            embed=ar.embed,
         )
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
