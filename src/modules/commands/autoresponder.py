@@ -80,6 +80,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             auto_deletion=auto_delete,
         )
 
+        # TODO: Improve message (use embed)
         await interaction.response.send_message(
             f"User {author_id} created the responder of {responder_name} "
             f"with trigger string {self.trigger_string.value} "
@@ -143,7 +144,16 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name: app_commands.Range[str, 1, 50],
         autodelete: Optional[app_commands.Range[int, 0, 60]],
     ):
-        # TODO: Check database for name prior to launching modal. Defer?
+        if type(ctx.client) is not HelperBot:
+            logging.error("Client wasn't the same as the main instance.")
+            return
+
+        # Defer?
+        responder = await ctx.client.db.get_autoresponse(name=name)
+        if responder is not None:
+            return await ctx.response.send_message(
+                f"A responder with the name `{name}` already exists!", ephemeral=True
+            )
 
         name = name.replace(":", "-")  # remove colons for parsing reasons
         autodelete = autodelete if autodelete is not None else 0
