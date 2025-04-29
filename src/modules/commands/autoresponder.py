@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from typing import Optional
 
 import discord
@@ -8,9 +7,9 @@ from discord.ext import commands
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
-from resources.constants import BLURPLE
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
+from resources.models.autoresponse import AutoResponse
 
 """
 Potential DB structure:
@@ -144,30 +143,11 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 ephemeral=True,
             )
 
-        embed = discord.Embed()
-        embed.timestamp = datetime.now()
-        embed.color = BLURPLE
-        embed.title = f":BloxlinkHappy: Auto Responder Info: {name}"
+        ar: AutoResponse = AutoResponse.from_database(responder)
 
-        trigger_strings = [f"`{trigger_str}`" for trigger_str in responder.get("message_triggers", [])]
-        final_trigger_string = ", ".join(trigger_strings)
+        ar.embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
 
-        embed.add_field(name="Trigger Strings", value=final_trigger_string, inline=False)
-        embed.add_field(name="Response", value=f"```{responder.get('response_message')}```", inline=False)
-        embed.add_field(
-            name="Auto Delete",
-            value=(
-                "Message does not auto delete."
-                if (rd := responder.get("auto_deletion", 0)) == 0
-                else f"After `{rd}` seconds"
-            ),
-        )
-
-        author_id = responder.get("author")
-        embed.add_field(name="Author", value=f"<@{author_id}> ({author_id})")
-        embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
-
-        return await ctx.response.send_message(embed=embed)
+        return await ctx.response.send_message(embed=ar.embed, content=ar)
 
     @app_commands.command(name="create", description="Create an automatic response")
     @app_commands.describe(
