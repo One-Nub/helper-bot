@@ -1,11 +1,13 @@
+import logging
 from typing import Optional
 
 import discord
 from discord import app_commands
-from discord.app_commands import Choice
 from discord.ext import commands
 
+import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
+from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 
 """
@@ -36,6 +38,59 @@ Example valid triggers:
 Asterisks in the middle of phrases (i.e. "how*join") shall not be treated as partial matching options.
 cspell: enable
 """
+
+
+class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
+    def __init__(self, *, timeout: float | None = None, custom_id: str) -> None:
+        super().__init__(timeout=timeout, custom_id=custom_id)
+
+    trigger_string: discord.ui.TextInput = discord.ui.TextInput(
+        label="Text to trigger response", custom_id="trigger_str", row=0
+    )
+    response_msg: discord.ui.TextInput = discord.ui.TextInput(
+        label="Message to send in response", custom_id="message_str", row=1, style=discord.TextStyle.paragraph
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        if interaction.data is None:
+            logging.error("Attempted to respond to request with no interaction data.")
+            return
+
+        custom_id: str = str(interaction.data.get("custom_id"))
+        custom_data = custom_id.split(":")
+        custom_data.pop(0)  # remove "mcr" segment
+
+        author_id = custom_data[0]
+        responder_name = custom_data[1]
+        auto_delete = custom_data[2]
+
+        resp_parsing.validate_trigger_string(self.trigger_string.value)
+
+        # TODO: Save to database. Update in-app cache? If we add that?
+        # Add helper method to find auto responder? - then we can use functools.lru_cache on that.
+        # Would clear the cache each time an auto responder is added.
+        # Really, I think we just need a cache of known valid triggers (and maybe their replies too), that way
+        # we're not spamming the db (even more) every time the bot sees a message 🤷‍♂️
+
+        await interaction.response.send_message(
+            f"User {author_id} created the responder of {responder_name} "
+            f"with trigger string {self.trigger_string.value} "
+            "and content of ```"
+            f"{self.response_msg.value}```"
+            f"and will delete itself after {auto_delete} seconds."
+        )
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        if type(error) == InvalidTriggerFormat:
+            await interaction.response.send_message(
+                f"Invalid trigger string: {str(error)}.\n"
+                f">>> Provided message content: \n__TRIGGER STRING:__ ```{self.trigger_string.value}```\n__MESSAGE__: ```\n{self.response_msg.value}```"
+            )
+        else:
+            await interaction.response.send_message(
+                "An unexpected error occurred. A log has been left for the devs 🫡"
+            )
+            return await super().on_error(interaction, error)
 
 
 @app_commands.guild_only()
@@ -72,17 +127,19 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="create", description="Create an automatic response")
     @app_commands.describe(
         name="A unique admin-facing name for this responder",
-        triggers="Text that will trigger this response. Use the help subcommand to get syntax information.",
         autodelete="How long (in seconds) until the bot vaporizes the original message and response?",
     )
     async def add_responder(
         self,
         ctx: discord.Interaction,
-        name: str,
-        triggers: str,
-        autodelete: Optional[int],
+        name: app_commands.Range[str, 1, 50],
+        autodelete: Optional[app_commands.Range[int, 0, 60]],
     ):
-        await ctx.response.send_message(f"placeholder with name {name} and trigger `{triggers}`")
+        # TODO: Check database for name prior to launching modal. Defer?
+
+        name = name.replace(":", "-")  # remove colons for parsing reasons
+        autodelete = autodelete if autodelete is not None else 0
+        await ctx.response.send_modal(NewResponderModal(custom_id=f"mcr:{ctx.user.id}:{name}:{autodelete}"))
 
     @app_commands.command(name="delete", description="Remove an automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
