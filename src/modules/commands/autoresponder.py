@@ -137,7 +137,6 @@ class MessageEditModal(discord.ui.Modal, title="Update Message"):
             logging.error("Client wasn't the same as the main instance.")
             return
 
-        # TODO: If caching is added, clear the cache. Or update with added trigger. functools.lru_cache
         bot: HelperBot = interaction.client
         await bot.db.update_autoresponse(
             responder_name,
