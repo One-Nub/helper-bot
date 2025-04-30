@@ -60,6 +60,8 @@ class HelperBot(commands.Bot):
 
         self.started_at = datetime.now(timezone.utc)
         self.button_handlers = {}
+        self.select_menu_handlers = {}
+
         if mongodb_url:
             self.db = MongoDB(mongodb_url)
         else:
@@ -133,6 +135,20 @@ class HelperBot(commands.Bot):
         # to the relevant dictionary
         def inner(func):
             self.button_handlers[custom_id_prefix] = func
+
+        return inner
+
+    def register_select_menu_handler(self, custom_id_prefix: str):
+        """Decorator to register a handler to handle a custom_id for a selection menu.
+
+        Args:
+            custom_id_prefix (str): The custom ID that this handler will be for.
+        """
+
+        # Basic form of a decorator except we're just using it to add the handler
+        # to the relevant dictionary
+        def inner(func):
+            self.select_menu_handlers[custom_id_prefix] = func
 
         return inner
 

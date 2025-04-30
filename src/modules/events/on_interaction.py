@@ -34,8 +34,11 @@ async def on_interaction(interaction: Interaction):
                     | ComponentType.mentionable_select.value
                     | ComponentType.channel_select.value
                 ):
-                    # TODO: Implement select channel handler method and triggers.
-                    print(f"select menu component of some kind {mcd.component_type}")
+                    for name, handler in bot.select_menu_handlers.items():
+                        if not mcd.custom_id.startswith(name):
+                            continue
+
+                        await handler(interaction)
 
         case InteractionType.application_command:
             pass
