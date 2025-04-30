@@ -341,8 +341,36 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @trigger_group.command(name="delete", description="Remove a message string that is responded to.")
     @app_commands.autocomplete(name=name_autofill)
-    async def trigger_del(self, ctx: discord.Interaction, name: str):
-        pass
+    @app_commands.describe(
+        name="The admin-facing name for the responder",
+        trigger="Optionally directly say what trigger string to remove. Must exactly match.",
+    )
+    async def trigger_del(self, ctx: discord.Interaction, name: str, trigger: Optional[str]):
+        responder = await self.bot.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"No auto response with the name `{name}` exists!", ephemeral=True
+            )
+
+        ar = AutoResponse.from_database(responder)
+
+        if trigger:
+            if trigger not in ar.message_triggers:
+                return await ctx.response.send_message(
+                    f"Error! Could not find the trigger {trigger} for the auto responder {name}.",
+                    ephemeral=True,
+                )
+
+            ar.message_triggers.remove(trigger)
+            await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
+            return await ctx.response.send_message(
+                content=f"Success! Auto responder `{name}` has been updated.\n"
+                f'```The string "{trigger}" will no longer trigger the response: "{ar.response_message}"```'
+            )
+
+        options = [discord.SelectOption(label=tr[:99], value=tr[:99]) for tr in ar.message_triggers]
+        select_menu = discord.ui.Select(custom_id="...", min_values=0, max_values=25, options=options)
+        # TODO: send select menu & handle selection response stuff.
 
     ####
     ####################---------AUTO DELETION COMMANDS-----------########################
