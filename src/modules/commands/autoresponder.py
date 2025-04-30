@@ -103,7 +103,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         if type(error) == InvalidTriggerFormat:
             await interaction.response.send_message(
-                f"Invalid trigger string: {str(error)}.\n"
+                f"Invalid trigger string: {str(error)}\n"
                 f">>> Provided message content: \n__TRIGGER STRING:__ ```{self.trigger_string.value}```\n__MESSAGE__: ```\n{self.response_msg.value}```"
             )
         else:
@@ -311,7 +311,34 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @trigger_group.command(name="add", description="Add an additional message string to respond to.")
     @app_commands.autocomplete(name=name_autofill)
     async def trigger_add(self, ctx: discord.Interaction, name: str, trigger: str):
-        pass
+        responder = await self.bot.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"No auto response with the name `{name}` exists!", ephemeral=True
+            )
+
+        try:
+            resp_parsing.validate_trigger_string(trigger)
+        except InvalidTriggerFormat as err:
+            return await ctx.response.send_message(
+                f"Invalid trigger string: {str(err)}\n"
+                f">>> Provided content: \n__TRIGGER STRING:__ ```{trigger}```",
+                ephemeral=True,
+            )
+
+        ar = AutoResponse.from_database(responder)
+        if trigger in ar.message_triggers:
+            return await ctx.response.send_message(
+                f"No changes were made, that trigger string is already set!", ephemeral=True
+            )
+
+        ar.message_triggers.append(trigger)
+        await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
+
+        await ctx.response.send_message(
+            content=f"Success! Auto responder `{name}` has been updated.\n"
+            f'```The string "{trigger}" will now trigger the response: "{ar.response_message}"```'
+        )
 
     @trigger_group.command(name="delete", description="Remove a message string that is responded to.")
     @app_commands.autocomplete(name=name_autofill)
