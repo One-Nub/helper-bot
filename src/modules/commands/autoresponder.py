@@ -331,7 +331,28 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     )
     @app_commands.autocomplete(name=name_autofill)
     async def autodelete_edit(self, ctx: discord.Interaction, name: str, duration: int):
-        pass
+        responder = await self.bot.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"No auto response with the name `{name}` exists!", ephemeral=True
+            )
+
+        ar = AutoResponse.from_database(responder)
+        if ar.auto_deletion == duration:
+            return await ctx.response.send_message(
+                f"No changes were made, that duration matches what is already set!", ephemeral=True
+            )
+
+        await self.bot.db.update_autoresponse(name, author=str(ctx.user.id), auto_deletion=duration)
+
+        response = (
+            "Message and reply do not auto delete after responding."
+            if duration == 0
+            else f"Message and reply will now delete after {duration} seconds."
+        )
+        await ctx.response.send_message(
+            content=f"Success! Auto responder `{name}` has been updated.\n```{response}```"
+        )
 
 
 async def setup(bot: HelperBot):
