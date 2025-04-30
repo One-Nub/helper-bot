@@ -4,6 +4,7 @@ from typing import Optional
 import discord
 from discord import app_commands
 from discord.ext import commands
+from textdistance import Sorensen
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
@@ -127,6 +128,25 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             return
 
     ####
+    ####################---------AUTOFILL-----------########################
+    ####
+
+    async def name_autofill(self, interaction: discord.Interaction, user_input: str):
+        # TODO: Get from cache instead? Add helper methods for database somewhere?
+        auto_responses = await self.bot.db.get_all_autoresponses()
+        valid_names = [AutoResponse.from_database(ar).name for ar in auto_responses]
+
+        if user_input == "":
+            return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+        valid_names = [
+            item
+            for item in valid_names
+            if Sorensen().similarity(user_input, item) > 0.65 or user_input in item
+        ]
+        return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+    ####
     ####################---------BASE COMMANDS-----------########################
     ####
 
@@ -140,6 +160,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @app_commands.command(name="view", description="View a specific automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
+    @app_commands.autocomplete(name=name_autofill)
     async def view_single(self, ctx: discord.Interaction, name: str):
         responder = await self.bot.db.get_autoresponse(name=name)
         if responder is None:
@@ -159,6 +180,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name="A unique admin-facing name for this responder",
         autodelete="How long (in seconds) until the bot vaporizes the original message and response?",
     )
+    @app_commands.autocomplete(name=name_autofill)
     async def add_responder(
         self,
         ctx: discord.Interaction,
@@ -178,6 +200,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @app_commands.command(name="delete", description="Remove an automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
+    @app_commands.autocomplete(name=name_autofill)
     async def delete_responder(self, ctx: discord.Interaction, name: str):
         responder = await self.bot.db.get_autoresponse(name=name)
         if responder is None:
@@ -205,6 +228,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @message_group.command(
         name="raw", description="View raw string of what the response is for the given responder."
     )
+    @app_commands.autocomplete(name=name_autofill)
     async def message_raw(self, ctx: discord.Interaction, name: str):
         responder = await self.bot.db.get_autoresponse(name=name)
         if responder is None:
@@ -221,6 +245,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @message_group.command(
         name="edit", description="Change what message is sent as a reply for the given responder."
     )
+    @app_commands.autocomplete(name=name_autofill)
     async def message_edit(self, ctx: discord.Interaction, name: str):
         pass
 
@@ -231,10 +256,12 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     trigger_group = app_commands.Group(name="trigger", description="Manage triggers for auto responders.")
 
     @trigger_group.command(name="add", description="Add an additional message string to respond to.")
+    @app_commands.autocomplete(name=name_autofill)
     async def trigger_add(self, ctx: discord.Interaction, name: str, trigger: str):
         pass
 
     @trigger_group.command(name="delete", description="Remove a message string that is responded to.")
+    @app_commands.autocomplete(name=name_autofill)
     async def trigger_del(self, ctx: discord.Interaction, name: str):
         pass
 
@@ -249,6 +276,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @autodelete_group.command(
         name="edit", description="Set time in seconds for the OG message and reply to vanish. 0 to unset."
     )
+    @app_commands.autocomplete(name=name_autofill)
     async def autodelete_edit(self, ctx: discord.Interaction, name: str, duration: int):
         pass
 
