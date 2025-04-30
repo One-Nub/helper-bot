@@ -353,6 +353,11 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
 
         ar = AutoResponse.from_database(responder)
+        if len(ar.message_triggers) == 1:
+            return await ctx.response.send_message(
+                f"Error! There is only one trigger for this auto responder. There must be at least one string to reply to!",
+                ephemeral=True,
+            )
 
         if trigger:
             if trigger not in ar.message_triggers:
