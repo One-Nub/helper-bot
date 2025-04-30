@@ -115,7 +115,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
 @app_commands.guild_only()
 class Autoresponder(commands.GroupCog, name="autoresponder"):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: HelperBot = bot
         super().__init__()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:  # type: ignore[reportIncompatibleMessageOverride] fmt: skip
@@ -141,11 +141,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="view", description="View a specific automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
     async def view_single(self, ctx: discord.Interaction, name: str):
-        if type(ctx.client) is not HelperBot:
-            logging.error("Client wasn't the same as the main instance.")
-            return
-
-        responder = await ctx.client.db.get_autoresponse(name=name)
+        responder = await self.bot.db.get_autoresponse(name=name)
         if responder is None:
             return await ctx.response.send_message(
                 f"Could not find the responder associated with the name `{name}`!",
@@ -169,12 +165,8 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name: app_commands.Range[str, 1, 50],
         autodelete: Optional[app_commands.Range[int, 0, 60]],
     ):
-        if type(ctx.client) is not HelperBot:
-            logging.error("Client wasn't the same as the main instance.")
-            return
-
         # Defer?
-        responder = await ctx.client.db.get_autoresponse(name=name)
+        responder = await self.bot.db.get_autoresponse(name=name)
         if responder is not None:
             return await ctx.response.send_message(
                 f"A responder with the name `{name}` already exists!", ephemeral=True
@@ -187,11 +179,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="delete", description="Remove an automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
     async def delete_responder(self, ctx: discord.Interaction, name: str):
-        if type(ctx.client) is not HelperBot:
-            logging.error("Client wasn't the same as the main instance.")
-            return
-
-        responder = await ctx.client.db.get_autoresponse(name=name)
+        responder = await self.bot.db.get_autoresponse(name=name)
         if responder is None:
             return await ctx.response.send_message(
                 f"Could not find the responder associated with the name `{name}`! No changes were made.",
@@ -203,7 +191,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
         embed.color = RED
 
-        await ctx.client.db.delete_autoresponse(name=name)
+        await self.bot.db.delete_autoresponse(name=name)
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was removed.", embed=embed
         )
@@ -218,11 +206,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name="raw", description="View raw string of what the response is for the given responder."
     )
     async def message_raw(self, ctx: discord.Interaction, name: str):
-        if type(ctx.client) is not HelperBot:
-            logging.error("Client wasn't the same as the main instance.")
-            return
-
-        responder = await ctx.client.db.get_autoresponse(name=name)
+        responder = await self.bot.db.get_autoresponse(name=name)
         if responder is None:
             return await ctx.response.send_message(
                 f"Could not find the responder associated with the name `{name}`! No changes were made.",
