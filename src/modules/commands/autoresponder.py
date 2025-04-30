@@ -113,6 +113,52 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             return await super().on_error(interaction, error)
 
 
+class MessageEditModal(discord.ui.Modal, title="Update Message"):
+    def __init__(self, *, timeout: float | None = None, custom_id: str) -> None:
+        super().__init__(timeout=timeout, custom_id=custom_id)
+
+    response_msg: discord.ui.TextInput = discord.ui.TextInput(
+        label="Message to send in response", custom_id="message_str", row=1, style=discord.TextStyle.paragraph
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        if interaction.data is None:
+            logging.error("Attempted to respond to request with no interaction data.")
+            return
+
+        custom_id: str = str(interaction.data.get("custom_id"))
+        custom_data = custom_id.split(":")
+        custom_data.pop(0)  # remove "med" segment
+
+        author_id = custom_data[0]
+        responder_name = custom_data[1]
+
+        if type(interaction.client) is not HelperBot:
+            logging.error("Client wasn't the same as the main instance.")
+            return
+
+        # TODO: If caching is added, clear the cache. Or update with added trigger. functools.lru_cache
+        bot: HelperBot = interaction.client
+        await bot.db.update_autoresponse(
+            responder_name,
+            response_message=self.response_msg.value,
+            author=author_id,
+        )
+        # TODO: Improve message (use embed)
+        await interaction.response.send_message(
+            (
+                f"Success! Your new message has been saved.\n"
+                f">>> __New Response:__\n```{self.response_msg.value}```"
+            ),
+        )
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        await interaction.response.send_message(
+            "An unexpected error occurred. A log has been left for the devs 🫡"
+        )
+        return await super().on_error(interaction, error)
+
+
 @app_commands.guild_only()
 class Autoresponder(commands.GroupCog, name="autoresponder"):
     def __init__(self, bot):
@@ -247,7 +293,14 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     )
     @app_commands.autocomplete(name=name_autofill)
     async def message_edit(self, ctx: discord.Interaction, name: str):
-        pass
+        # Defer?
+        responder = await self.bot.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"No auto response with the name `{name}` exists!", ephemeral=True
+            )
+
+        await ctx.response.send_modal(MessageEditModal(custom_id=f"med:{ctx.user.id}:{name}"))
 
     ####
     ####################---------MESSAGE TRIGGER COMMANDS-----------########################
