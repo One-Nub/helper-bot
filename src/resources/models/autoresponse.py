@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 import discord
-from attrs import Factory, converters, define, field
+from attrs import Factory, define, field
 
 from resources.utils.base_embeds import StandardEmbed
 
