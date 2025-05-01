@@ -4,6 +4,7 @@ from typing import Optional
 import discord
 from attrs import Factory, define, field
 
+from resources.constants import UNICODE_ZERO_WIDTH_SPACE
 from resources.utils.base_embeds import StandardEmbed
 
 
@@ -37,7 +38,7 @@ class AutoResponse:
         final_trigger_string = ", ".join(trigger_strings)
 
         embed.add_field(name="Trigger Strings", value=final_trigger_string, inline=False)
-        embed.add_field(name="Response", value=f"```{self.response_message}```", inline=False)
+        embed.add_field(name="Response", value=f"{self.codeblock_response_msg}", inline=False)
         embed.add_field(
             name="Auto Delete",
             value=(
@@ -52,7 +53,12 @@ class AutoResponse:
 
     @property
     def codeblock_response_msg(self) -> str:
-        altered_msg = self.response_message.replace("```", r"\`\`\`")
+        # TODO: this breaks copying and pasting a raw message with code blocks in it... as long as people
+        # don't use code blocks in their replies it's fine
+        altered_msg = self.response_message.replace(
+            "```",
+            f"{UNICODE_ZERO_WIDTH_SPACE}`{UNICODE_ZERO_WIDTH_SPACE}`{UNICODE_ZERO_WIDTH_SPACE}`{UNICODE_ZERO_WIDTH_SPACE}",
+        )
         return f"```{altered_msg}```"
 
     def __str__(self) -> str:
