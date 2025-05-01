@@ -2,8 +2,6 @@ from typing import Optional
 
 from attrs import Factory, define, field
 
-from resources.constants import BLURPLE
-
 
 @define(kw_only=True)
 class MessageComponentData:
