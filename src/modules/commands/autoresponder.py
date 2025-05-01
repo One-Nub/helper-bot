@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 
 import discord
@@ -11,7 +12,9 @@ from resources.checks import is_staff
 from resources.constants import RED
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
+from resources.helper_bot import instance as bot_instance
 from resources.models.autoresponse import AutoResponse
+from resources.models.interaction_data import MessageComponentData
 
 """
 Potential DB structure:
@@ -373,9 +376,94 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 f'```The string "{trigger}" will no longer trigger the response: "{ar.response_message}"```'
             )
 
-        options = [discord.SelectOption(label=tr[:99], value=tr[:99]) for tr in ar.message_triggers]
-        select_menu = discord.ui.Select(custom_id="...", min_values=0, max_values=25, options=options)
-        # TODO: send select menu & handle selection response stuff.
+        options = [discord.SelectOption(label=tr[:99], value=tr[:99]) for tr in ar.message_triggers[:25]]
+        select_menu = discord.ui.Select(
+            custom_id=f"tr-del:{ctx.user.id}:{name}", min_values=0, max_values=len(options), options=options
+        )
+        view = discord.ui.View(timeout=None)
+        view.add_item(select_menu)
+
+        await ctx.response.send_message(content="Select a trigger to remove!", view=view)
+
+    @bot_instance.register_select_menu_handler("tr-del")
+    @staticmethod
+    async def trigger_del_select_menu(ctx: discord.Interaction):
+        # We already know data is a valid entity by this point, typing system doesn't know that though
+        data = MessageComponentData(**ctx.data)  # pyright: ignore[reportCallIssue]
+
+        custom_id_data = data.custom_id.split(":")
+        custom_id_data.pop(0)
+        original_author_id = custom_id_data[0]
+        responder_name = custom_id_data[1]
+
+        if not ctx.message:
+            # python pls give me a null aware operator.
+            logging.error("Execution failed in trigger_del_select_menu because there's no message.")
+            return
+
+        # Disable after 5 mins.
+        if (datetime.now(timezone.utc) - ctx.message.created_at).seconds > 300:
+            return await ctx.response.edit_message(
+                content="-# This prompt was disabled because 5 minutes have passed since its creation.",
+                view=None,
+            )
+
+        # Require person who ran the command
+        if str(ctx.user.id) != original_author_id:
+            return await ctx.response.send_message(
+                f"You're not allowed to edit this select menu.", ephemeral=True
+            )
+
+        # I wish we could pass along data here without getting the full object from the db again... but this
+        # is acting stateless so we can't (easily)
+        responder = await bot_instance.db.get_autoresponse(name=responder_name)
+        if not responder:
+            return await ctx.response.send_message(
+                f"There was an issue getting that responder ({responder_name}) from the DB."
+            )
+
+        # Require >1 trigger string to allow deletions. redundant? maybe.
+        ar = AutoResponse.from_database(responder)
+        if len(ar.message_triggers) == 1:
+            return await ctx.response.send_message(
+                f"Error! There is only one trigger for this auto responder. There must be at least one string to reply to!",
+                ephemeral=True,
+            )
+
+        selections = data.values
+        if not selections:
+            return await ctx.response.send_message(f"Error! No selections were found.", ephemeral=True)
+
+        if len(selections) == len(ar.message_triggers):
+            return await ctx.response.send_message(
+                f"Error! You can't remove all of the trigger strings.", ephemeral=True
+            )
+
+        # figure out which strings will be kept. values might be truncated (if for some reason we have a trigger
+        # over 100 characters long).
+        major_output = []
+        for sel in selections:
+            output = set()
+            for items in ar.message_triggers:
+                if not items.startswith(sel):
+                    output.add(items)
+            major_output.append(output)
+
+        major_output = list(set.intersection(*major_output))
+        await bot_instance.db.update_autoresponse(name=responder_name, message_triggers=major_output)
+
+        formatted_selections = [f"- `{x}`" for x in selections]
+        output_str = "\n".join(formatted_selections)
+
+        # TODO: change output to embed
+        response_str = (
+            f"Success! Auto responder `{responder_name}` has been updated.\n"
+            f'The trigger string(s) \n{output_str}\n will no longer trigger the response: "{ar.response_message}"'
+        )
+        if ctx.message:
+            await ctx.response.edit_message(content=response_str, view=None)
+        else:
+            await ctx.response.send_message(content=response_str)
 
     ####
     ####################---------AUTO DELETION COMMANDS-----------########################
