@@ -8,7 +8,8 @@ from resources.constants import MODULES
 from resources.helper_bot import HelperBot
 from resources.secrets import BOT_TOKEN, LINEAR_API_KEY, MONGO_URL  # pylint: disable=E0611 # type: ignore
 
-utils.setup_logging(level=logging.INFO)
+# cspell: disable-next-line
+logging.basicConfig(format="[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s", level=logging.INFO)
 
 parser = argparse.ArgumentParser(prog="helper-bot")
 parser.add_argument("-ns", "--no-sync", action="store_true")
