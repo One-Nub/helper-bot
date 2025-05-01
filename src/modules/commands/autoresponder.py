@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import math
 from datetime import datetime, timezone
@@ -48,6 +49,30 @@ cspell: enable
 """
 
 MAX_ITEMS_PER_PAGE = 10
+RESPONSE_COOLDOWN = 10  # seconds
+
+
+class UserResponseCooldown:
+    """Handles logic for applying a cooldown for the bot responding to users. Spam prevention basically."""
+
+    # Not a suggested way of doing this, alternatively can make it a singleton class.
+    recently_responded_users: set[int] = set()
+
+    @staticmethod
+    async def _add_user(user_id: int):
+        """Adds user to be on cooldown, then removes after RESPONSE_COOLDOWN duration."""
+        UserResponseCooldown.recently_responded_users.add(user_id)
+        await asyncio.sleep(RESPONSE_COOLDOWN)
+        UserResponseCooldown.recently_responded_users.discard(user_id)
+
+    @staticmethod
+    def check_for_user(user_id: int) -> bool:
+        """See if a user is on cooldown (True) or not (False). Automatically puts user on cooldown when False."""
+        if not user_id in UserResponseCooldown.recently_responded_users:
+            asyncio.create_task(UserResponseCooldown._add_user(user_id=user_id))
+            return False
+        else:
+            return True
 
 
 class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
@@ -89,6 +114,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             author=author_id,
             auto_deletion=auto_delete,
         )
+        Autoresponder.stored_trigger_map.clear()
 
         ar = AutoResponse(
             name=responder_name,
@@ -154,6 +180,7 @@ class MessageEditModal(discord.ui.Modal, title="Update Message"):
             response_message=self.response_msg.value,
             author=author_id,
         )
+        Autoresponder.stored_trigger_map.clear()
 
         ar = AutoResponse(name=responder_name, response_message=self.response_msg.value, author=author_id)
         embed = StandardEmbed(footer_icon_url=str(interaction.user.display_avatar))
@@ -171,6 +198,8 @@ class MessageEditModal(discord.ui.Modal, title="Update Message"):
 
 @app_commands.guild_only()
 class Autoresponder(commands.GroupCog, name="autoresponder"):
+    stored_trigger_map: dict[str, AutoResponse] = dict()
+
     def __init__(self, bot):
         self.bot: HelperBot = bot
         super().__init__()
@@ -183,6 +212,41 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     async def message_handler(self, message: discord.Message):
         if message.author.bot:
             return
+
+        if not self.stored_trigger_map:
+            # Update local map.
+            logging.info("Updating the stored trigger map...")
+            auto_responses = await self.bot.db.get_all_autoresponses()
+            auto_responses = [AutoResponse.from_database(x) for x in auto_responses]
+
+            for ar in auto_responses:
+                for tr in ar.message_triggers:
+                    self.stored_trigger_map[tr] = ar
+            logging.info(
+                f"Stored trigger map updated. There are now {len(self.stored_trigger_map)} values in the map."
+            )
+
+        for key, val in self.stored_trigger_map.items():
+            check_match = resp_parsing.search_message_match(message=message.content, initial_trigger=key)
+            if not check_match:
+                continue
+
+            user_on_cooldown = UserResponseCooldown.check_for_user(user_id=message.author.id)
+            if user_on_cooldown:
+                return
+
+            reply_msg = await message.reply(
+                content=(
+                    f"{val.response_message}\n"
+                    "-# This is an automated reply! If this doesn't make sense, please ask for a volunteer!"
+                )
+            )
+
+            if val.auto_deletion != 0:
+                await message.delete(delay=val.auto_deletion)
+                await reply_msg.delete(delay=val.auto_deletion)
+
+            break
 
     ####
     ####################---------AUTOFILL-----------########################
@@ -500,6 +564,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         ar.message_triggers.append(trigger)
         await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
+        self.stored_trigger_map.clear()
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
         embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
@@ -536,6 +601,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
             ar.message_triggers.remove(trigger)
             await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
+            self.stored_trigger_map.clear()
 
             embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
             embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
@@ -655,6 +721,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
 
         await self.bot.db.update_autoresponse(name, author=str(ctx.user.id), auto_deletion=duration)
+        self.stored_trigger_map.clear()
 
         response = (
             "Message and reply do not auto delete after responding."
