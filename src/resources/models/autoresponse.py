@@ -4,7 +4,7 @@ from typing import Optional
 import discord
 from attrs import Factory, converters, define, field
 
-from resources.constants import BLURPLE
+from resources.utils.base_embeds import StandardEmbed
 
 
 def default2int(x) -> int:
@@ -30,9 +30,7 @@ class AutoResponse:
 
     @property
     def embed(self) -> discord.Embed:
-        embed = discord.Embed()
-        embed.timestamp = datetime.now()
-        embed.color = BLURPLE
+        embed = StandardEmbed()
         embed.title = f":BloxlinkHappy: Auto Responder Info: {self.name}"
 
         trigger_strings = [f"`{trigger_str}`" for trigger_str in self.message_triggers]
