@@ -50,6 +50,11 @@ class AutoResponse:
 
         return embed
 
+    @property
+    def codeblock_response_msg(self) -> str:
+        altered_msg = self.response_message.replace("```", r"\`\`\`")
+        return f"```{altered_msg}```"
+
     def __str__(self) -> str:
         # trigger_strings = [f"`{trigger_str}`" for trigger_str in self.message_triggers]
         auto_del_str = (
