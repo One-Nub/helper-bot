@@ -94,7 +94,6 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             auto_deletion=auto_delete,
         )
 
-        # TODO: Improve message (use embed)
         await interaction.response.send_message(
             (
                 f"Success! Your new auto responder has been saved.\n"
