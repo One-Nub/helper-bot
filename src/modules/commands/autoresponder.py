@@ -55,6 +55,8 @@ RESPONSE_COOLDOWN = 10  # seconds
 class UserResponseCooldown:
     """Handles logic for applying a cooldown for the bot responding to users. Spam prevention basically."""
 
+    # TODO: Move to struct and make it not static? Since for cogs it's only init'd once.
+
     # Not a suggested way of doing this, alternatively can make it a singleton class.
     recently_responded_users: set[int] = set()
 
@@ -75,6 +77,7 @@ class UserResponseCooldown:
             return True
 
 
+# TODO: consider moving autoresponder to a subfolder, and moving modals into their own files.
 class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
     def __init__(self, *, timeout: float | None = None, custom_id: str) -> None:
         super().__init__(timeout=timeout, custom_id=custom_id)
@@ -522,7 +525,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         # Intentionally not using an embed so that way it's easier for people to copy.
         return await ctx.response.send_message(
-            f"### Raw Message Content for `{ar.name}`\n{ar.codeblock_response_msg}"
+            f"### Raw Message Content for `{ar.name}`\n{discord.utils.escape_markdown(ar.response_message)}"
         )
 
     @message_group.command(
