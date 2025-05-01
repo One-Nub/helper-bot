@@ -203,7 +203,49 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @app_commands.command(name="help", description="Learn how to use the command!")
     async def command_help(self, ctx: discord.Interaction):
-        await ctx.response.send_message("placeholder")
+        embed = StandardEmbed(
+            title=":BloxlinkHappy: Auto Responder Guide", footer_icon_url=str(ctx.user.display_avatar)
+        )
+
+        description = (
+            "> Welcome! This guide is going to teach you some of the things to know about the /autoresponder commands.",
+            "Firstly, some key terms for the slash commands.",
+            '- "Message" - This is the response that the bot will send.',
+            '- "Trigger" - This is what we call a string that the bot will look for in a user sent message.',
+            "> Trigger string usage is shown below. If you have more questions, ask Nub for clarification!",
+        )
+        embed.description = "\n".join(description)
+
+        embed.add_field(
+            name="Trigger String special characters:",
+            value=(
+                f"- `{resp_parsing.SpecialChar.PARTIAL}` - Start and end of string partial matching.\n"
+                f"- `{resp_parsing.SpecialChar.EXPAND}` - Matches anything between two strings.\n"
+                f"- `{resp_parsing.SpecialChar.SPLIT}` - Splits the single trigger into individual segments that must ALL be found in the message."
+            ),
+        )
+
+        embed.add_field(
+            name="Trigger String restrictions:",
+            value=(
+                "Inside a segment...\n"
+                f"- `{resp_parsing.SpecialChar.PARTIAL}` and `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used together.\n"
+                f"- `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used multiple times."
+                f"- `{resp_parsing.SpecialChar.PARTIAL}` works ONLY at the beginning and end. Anywhere else it is treated as a literal `{resp_parsing.SpecialChar.PARTIAL}` character."
+            ),
+        )
+
+        embed.add_field(
+            name="Trigger String example usage:",
+            value=(
+                f"- `*verify` - matches anything suffixed by verify\n - `verify*` - matches anything prefixed by verify\n - `*verify*` - matches anything prefixed or suffixed by verify,\n"
+                f"- `help ... banned` - matches anything between the words 'help' and 'banned' in a message. Good for requiring words in a specific order.\n"
+                f"- `help, ban*` - matches the words 'help' and any word suffixed with 'ban' in a message. Both must be found to match."
+            ),
+            inline=False,
+        )
+
+        await ctx.response.send_message(embed=embed)
 
     @app_commands.command(name="all", description="View all set automatic responses")
     async def view_all(self, ctx: discord.Interaction):
