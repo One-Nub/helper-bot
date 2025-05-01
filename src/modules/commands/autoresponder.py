@@ -16,7 +16,7 @@ from resources.helper_bot import HelperBot
 from resources.helper_bot import instance as bot_instance
 from resources.models.autoresponse import AutoResponse
 from resources.models.interaction_data import MessageComponentData
-from resources.utils.base_embeds import StandardEmbed
+from resources.utils.base_embeds import ErrorEmbed, StandardEmbed
 
 """
 Potential DB structure:
@@ -108,10 +108,15 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         if type(error) == InvalidTriggerFormat:
-            await interaction.response.send_message(
-                f"Invalid trigger string: {str(error)}\n"
-                f">>> Provided message content: \n__TRIGGER STRING:__ ```{self.trigger_string.value}```\n__MESSAGE__: ```\n{self.response_msg.value}```"
-            )
+            embed = ErrorEmbed(footer_icon_url=str(interaction.user.display_avatar))
+            embed.title = ":BloxlinkDead: Invalid Trigger String."
+            embed.add_field(name="Trigger string:", value=self.trigger_string.value)
+
+            # Not using AutoResponse class bc we would have to parse the name out and stuff again.
+            clean_message = self.response_msg.value.replace("```", r"\`\`\`")
+            embed.add_field(name="Message:", value=f"```{clean_message}```")
+
+            await interaction.response.send_message(embed=embed)
         else:
             await interaction.response.send_message(
                 "An unexpected error occurred. A log has been left for the devs 🫡"
@@ -149,13 +154,13 @@ class MessageEditModal(discord.ui.Modal, title="Update Message"):
             response_message=self.response_msg.value,
             author=author_id,
         )
-        # TODO: Improve message (use embed)
-        await interaction.response.send_message(
-            (
-                f"Success! Your new message has been saved.\n"
-                f">>> __New Response:__\n```{self.response_msg.value}```"
-            ),
-        )
+
+        ar = AutoResponse(name=responder_name, response_message=self.response_msg.value, author=author_id)
+        embed = StandardEmbed(footer_icon_url=str(interaction.user.display_avatar))
+        embed.title = f":BloxlinkHappy: Success! Auto responder `{responder_name}` has been updated."
+        embed.add_field(name="New Message:", value=ar.codeblock_response_msg)
+
+        await interaction.response.send_message(embed=embed)
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.response.send_message(
@@ -170,7 +175,8 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         self.bot: HelperBot = bot
         super().__init__()
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:  # type: ignore[reportIncompatibleMessageOverride] fmt: skip
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:  # type: ignore
+        # type ignored because it is freaking out about return types and overrides.
         return await is_staff(interaction)
 
     @commands.Cog.listener("on_message")
@@ -444,8 +450,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
         ar = AutoResponse.from_database(responder)
 
+        # Intentionally not using an embed so that way it's easier for people to copy.
         return await ctx.response.send_message(
-            f"### Raw Message Content for `{ar.name}`\n```{ar.response_message}```"
+            f"### Raw Message Content for `{ar.name}`\n{ar.codeblock_response_msg}"
         )
 
     @message_group.command(
@@ -480,11 +487,10 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         try:
             resp_parsing.validate_trigger_string(trigger)
         except InvalidTriggerFormat as err:
-            return await ctx.response.send_message(
-                f"Invalid trigger string: {str(err)}\n"
-                f">>> Provided content: \n__TRIGGER STRING:__ ```{trigger}```",
-                ephemeral=True,
-            )
+            embed = ErrorEmbed(title=":BloxlinkDead: Invalid Trigger String")
+            embed.add_field(name="Error", value=str(err))
+            embed.add_field(name="Trigger string", value=trigger)
+            return await ctx.response.send_message(embed=embed)
 
         ar = AutoResponse.from_database(responder)
         if trigger in ar.message_triggers:
@@ -495,10 +501,11 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         ar.message_triggers.append(trigger)
         await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
 
-        await ctx.response.send_message(
-            content=f"Success! Auto responder `{name}` has been updated.\n"
-            f'```The string "{trigger}" will now trigger the response: "{ar.response_message}"```'
-        )
+        embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
+        embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
+        embed.add_field(name="New Trigger:", value=trigger)
+        embed.add_field(name="Response:", value=ar.codeblock_response_msg)
+        await ctx.response.send_message(embed=embed)
 
     @trigger_group.command(name="delete", description="Remove a message string that is responded to.")
     @app_commands.autocomplete(name=name_autofill)
@@ -529,10 +536,12 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
             ar.message_triggers.remove(trigger)
             await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
-            return await ctx.response.send_message(
-                content=f"Success! Auto responder `{name}` has been updated.\n"
-                f'```The string "{trigger}" will no longer trigger the response: "{ar.response_message}"```'
-            )
+
+            embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
+            embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
+            embed.add_field(name="Trigger Removed:", value=trigger)
+            embed.add_field(name="From Response:", value=ar.codeblock_response_msg)
+            return await ctx.response.send_message(embed=embed)
 
         options = [discord.SelectOption(label=tr[:99], value=tr[:99]) for tr in ar.message_triggers[:25]]
         select_menu = discord.ui.Select(
@@ -577,7 +586,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         responder = await bot_instance.db.get_autoresponse(name=responder_name)
         if not responder:
             return await ctx.response.send_message(
-                f"There was an issue getting that responder ({responder_name}) from the DB."
+                f"There was an issue getting that responder (`{responder_name}`) from the DB.", ephemeral=True
             )
 
         # Require >1 trigger string to allow deletions. redundant? maybe.
@@ -613,15 +622,12 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         formatted_selections = [f"- `{x}`" for x in selections]
         output_str = "\n".join(formatted_selections)
 
-        # TODO: change output to embed
-        response_str = (
-            f"Success! Auto responder `{responder_name}` has been updated.\n"
-            f'The trigger string(s) \n{output_str}\n will no longer trigger the response: "{ar.response_message}"'
-        )
-        if ctx.message:
-            await ctx.response.edit_message(content=response_str, view=None)
-        else:
-            await ctx.response.send_message(content=response_str)
+        embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
+        embed.title = f":BloxlinkHappy: Success! Auto responder `{responder_name}` has been updated."
+        embed.add_field(name="Removed Triggers:", value=output_str)
+        embed.add_field(name="From Response:", value=ar.codeblock_response_msg)
+
+        return await ctx.response.edit_message(content="", embed=embed, view=None)
 
     ####
     ####################---------AUTO DELETION COMMANDS-----------########################
@@ -655,9 +661,10 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             if duration == 0
             else f"Message and reply will now delete after {duration} seconds."
         )
-        await ctx.response.send_message(
-            content=f"Success! Auto responder `{name}` has been updated.\n```{response}```"
-        )
+        embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
+        embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
+        embed.add_field(name="Changes:", value=response)
+        await ctx.response.send_message(embed=embed)
 
 
 async def setup(bot: HelperBot):
