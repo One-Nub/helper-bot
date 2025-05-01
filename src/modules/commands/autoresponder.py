@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -9,12 +10,13 @@ from textdistance import Sorensen
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
-from resources.constants import RED
+from resources.constants import RED, UNICODE_LEFT, UNICODE_RIGHT
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 from resources.helper_bot import instance as bot_instance
 from resources.models.autoresponse import AutoResponse
 from resources.models.interaction_data import MessageComponentData
+from resources.utils.base_embeds import StandardEmbed
 
 """
 Potential DB structure:
@@ -44,6 +46,8 @@ Example valid triggers:
 Asterisks in the middle of phrases (i.e. "how*join") shall not be treated as partial matching options.
 cspell: enable
 """
+
+MAX_ITEMS_PER_PAGE = 10
 
 
 class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
@@ -203,7 +207,120 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @app_commands.command(name="all", description="View all set automatic responses")
     async def view_all(self, ctx: discord.Interaction):
-        await ctx.response.send_message("placeholder")
+        auto_responses = await self.bot.db.get_all_autoresponses()
+        auto_responses = [AutoResponse.from_database(x) for x in auto_responses]
+        auto_responses.sort(key=(lambda y: y.name))
+
+        # Determine max # of pages
+        max_pages = math.ceil(len(auto_responses) / MAX_ITEMS_PER_PAGE)
+        # Build generic buttons into a view
+        view = discord.ui.View(timeout=None)
+
+        left_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            label=UNICODE_LEFT,
+            disabled=True,
+            custom_id=f"ar_all:{ctx.user.id}:0:{max_pages}",
+        )
+
+        right_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            label=UNICODE_RIGHT,
+            disabled=True if max_pages == 1 else False,
+            custom_id=f"ar_all:{ctx.user.id}:1:{max_pages}",
+        )
+
+        view.add_item(left_button)
+        view.add_item(right_button)
+
+        # Get the embed & send.
+        embed = Autoresponder.build_view_page(str(ctx.user.display_avatar), auto_responses, 0)
+        await ctx.response.send_message(embed=embed, view=view)
+
+    @staticmethod
+    def build_view_page(avatar_url: str, all_items: list[AutoResponse], page_num: int = 0):
+        max_pages = math.ceil(len(all_items) / MAX_ITEMS_PER_PAGE)
+
+        # Grab the 10 elements that we care about
+        offset = page_num * MAX_ITEMS_PER_PAGE
+        selected_items = all_items[offset : offset + MAX_ITEMS_PER_PAGE]
+
+        # Build the embed.
+        embed = StandardEmbed(title="All Auto Responders")
+
+        trigger_strings = []
+        for ar in selected_items:
+            trigger_strings.append(f"- {ar.name} -> `{ar.message_triggers}`")
+        embed.description = "\n".join(trigger_strings)
+
+        # footer
+        embed.set_footer(text=f"Page {page_num + 1}/{max_pages}", icon_url=avatar_url)
+
+        # return the entire embed
+        return embed
+
+    @bot_instance.register_button_handler("ar_all")
+    @staticmethod
+    async def view_all_button_handler(ctx: discord.Interaction):
+        # We already know data is a valid entity by this point, typing system doesn't know that though
+        data = MessageComponentData(**ctx.data)  # pyright: ignore[reportCallIssue]
+
+        custom_id_data = data.custom_id.split(":")
+        custom_id_data.pop(0)
+        original_author_id = custom_id_data[0]
+        new_page_index = int(custom_id_data[1])
+        max_pages = int(custom_id_data[2])
+
+        if not ctx.message:
+            logging.error("Execution failed in view_all_button_handler because there's no message.")
+            return
+
+        # Disable after 5 mins.
+        if (datetime.now(timezone.utc) - ctx.message.created_at).seconds > 300:
+            view = discord.ui.View.from_message(ctx.message)
+            view.children
+            for x in view.children:
+                # Ignored because this is how d.py says to do it.
+                x.disabled = True  # pyright: ignore[reportAttributeAccessIssue]
+
+            return await ctx.response.edit_message(
+                content="-# This prompt was disabled because 5 minutes have passed since its creation.",
+                view=view,
+            )
+
+        # Require person who ran the command
+        if str(ctx.user.id) != original_author_id:
+            return await ctx.response.send_message(
+                f"You're not allowed to flip through this embed!", ephemeral=True
+            )
+
+        prev_page_index = 0 if new_page_index - 1 < 0 else new_page_index - 1
+        next_page_index = max_pages if new_page_index + 1 >= max_pages else new_page_index + 1
+
+        view = discord.ui.View()
+        left_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            label=UNICODE_LEFT,
+            disabled=True if prev_page_index <= 0 and new_page_index != 1 else False,
+            custom_id=f"ar_all:{ctx.user.id}:{prev_page_index}:{max_pages}",
+        )
+
+        right_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            label=UNICODE_RIGHT,
+            disabled=True if next_page_index == max_pages else False,
+            custom_id=f"ar_all:{ctx.user.id}:{next_page_index}:{max_pages}",
+        )
+
+        view.add_item(left_button)
+        view.add_item(right_button)
+
+        auto_responses = await bot_instance.db.get_all_autoresponses()
+        auto_responses = [AutoResponse.from_database(x) for x in auto_responses]
+        auto_responses.sort(key=(lambda y: y.name))
+
+        embed = Autoresponder.build_view_page(str(ctx.user.display_avatar), auto_responses, new_page_index)
+        await ctx.response.edit_message(embed=embed, view=view)
 
     @app_commands.command(name="view", description="View a specific automatic response")
     @app_commands.describe(name="The admin-facing name for the responder")
