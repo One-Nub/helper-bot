@@ -226,11 +226,17 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 f"Stored trigger map updated. There are now {len(self.stored_trigger_map)} values in the map."
             )
 
+        # Ignore messages that start with the bot prefix (.)
+        # Could false positive on a chat command otherwise.
+        if message.content.startswith(str(self.bot.command_prefix)):
+            return
+
         for key, val in self.stored_trigger_map.items():
             check_match = resp_parsing.search_message_match(message=message.content, initial_trigger=key)
             if not check_match:
                 continue
 
+            # We only ignore on a match since it applies cooldown after checking and not on cooldown.
             user_on_cooldown = UserResponseCooldown.check_for_user(user_id=message.author.id)
             if user_on_cooldown:
                 return
