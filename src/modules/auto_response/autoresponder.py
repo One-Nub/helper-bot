@@ -127,7 +127,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             value=(
                 f"- `{resp_parsing.SpecialChar.PARTIAL}` - Start and end of string partial matching.\n"
                 f"- `{resp_parsing.SpecialChar.EXPAND}` - Matches anything between two strings.\n"
-                f"- `{resp_parsing.SpecialChar.SPLIT}` - Splits the single trigger into individual segments that must ALL be found in the message."
+                f"- `{resp_parsing.SpecialChar.SPLIT}` - Splits the single trigger into individual segments that must ALL be found in the message.\n"
                 f"- `{resp_parsing.SpecialChar.EXPLICIT}` - The user's message must EXACTLY MATCH this trigger string (excluding this character) (case-insensitive)."
             ),
         )
@@ -137,8 +137,8 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             value=(
                 "Inside a segment...\n"
                 f"- `{resp_parsing.SpecialChar.PARTIAL}` and `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used together.\n"
-                f"- `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used multiple times."
-                f"- `{resp_parsing.SpecialChar.PARTIAL}` works ONLY at the beginning and end. Anywhere else it is treated as a literal `{resp_parsing.SpecialChar.PARTIAL}` character."
+                f"- `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used multiple times.\n"
+                f"- `{resp_parsing.SpecialChar.PARTIAL}` works ONLY at the beginning and end. Anywhere else it is treated as a literal `{resp_parsing.SpecialChar.PARTIAL}` character.\n"
                 f"- ALL other special characters are **ignored** when `{resp_parsing.SpecialChar.EXPLICIT}` is at the start of the string."
             ),
         )
