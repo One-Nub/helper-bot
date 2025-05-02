@@ -18,34 +18,9 @@ from resources.helper_bot import instance as bot_instance
 from resources.models.autoresponse import AutoResponse
 from resources.models.interaction_data import MessageComponentData
 from resources.utils.base_embeds import ErrorEmbed, StandardEmbed
+from resources.utils.timed_user_cooldown import TimedUserCooldown
 
 MAX_ITEMS_PER_PAGE = 10
-RESPONSE_COOLDOWN = 10  # seconds
-
-
-class UserResponseCooldown:
-    """Handles logic for applying a cooldown for the bot responding to users. Spam prevention basically."""
-
-    # TODO: Move to struct and make it not static? Since for cogs it's only init'd once.
-
-    # Not a suggested way of doing this, alternatively can make it a singleton class.
-    recently_responded_users: set[int] = set()
-
-    @staticmethod
-    async def _add_user(user_id: int):
-        """Adds user to be on cooldown, then removes after RESPONSE_COOLDOWN duration."""
-        UserResponseCooldown.recently_responded_users.add(user_id)
-        await asyncio.sleep(RESPONSE_COOLDOWN)
-        UserResponseCooldown.recently_responded_users.discard(user_id)
-
-    @staticmethod
-    def check_for_user(user_id: int) -> bool:
-        """See if a user is on cooldown (True) or not (False). Automatically puts user on cooldown when False."""
-        if not user_id in UserResponseCooldown.recently_responded_users:
-            asyncio.create_task(UserResponseCooldown._add_user(user_id=user_id))
-            return False
-        else:
-            return True
 
 
 # TODO: consider moving autoresponder to a subfolder, and moving modals into their own files.
@@ -175,6 +150,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     def __init__(self, bot):
         self.bot: HelperBot = bot
+        self.cooldown = TimedUserCooldown()
         super().__init__()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:  # type: ignore
@@ -210,7 +186,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 continue
 
             # We only ignore on a match since it applies cooldown after checking and not on cooldown.
-            user_on_cooldown = UserResponseCooldown.check_for_user(user_id=message.author.id)
+            user_on_cooldown = self.cooldown.check_for_user(user_id=message.author.id)
             if user_on_cooldown:
                 return
 
