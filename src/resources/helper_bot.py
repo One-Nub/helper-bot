@@ -10,7 +10,6 @@ from discord.ext import commands
 from motor import motor_asyncio
 
 from resources.constants import DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
-from resources.linear_api import LinearAPI
 
 instance: "HelperBot" = None  # type: ignore
 logger = logging.getLogger()
@@ -21,7 +20,6 @@ class HelperBot(commands.Bot):
         self,
         command_prefix: str,
         mongodb_url: str,
-        linear_api_key: str,
         modules: list[str],
         *,
         help_command: Optional[commands.HelpCommand] = None,
@@ -36,7 +34,6 @@ class HelperBot(commands.Bot):
         Args:
             command_prefix (str): Default prefix for chat commands.
             mongodb_url (str): URL to connect to MongoDB with.
-            linear_api_key (str): (TO BE REMOVED) API key to connect with Linear. Deprecated command/functionality.
             modules (list[str]): Directories under src/modules that contain commands and cogs to be loaded by Discord.py.
             intents (discord.Intents): Intents for the bot.
             help_command (Optional[commands.HelpCommand], optional): See discord.py docs. Defaults to None.
@@ -66,11 +63,6 @@ class HelperBot(commands.Bot):
             self.db = MongoDB(mongodb_url)
         else:
             logger.error("NO MONGODB URL WAS FOUND.")
-
-        if linear_api_key:
-            LinearAPI.connect(linear_api_key)
-        else:
-            logger.error("NO LINEAR API KEY FOUND.")
 
         instance = self
 

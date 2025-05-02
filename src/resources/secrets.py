@@ -9,7 +9,6 @@ VALID_SECRETS = (
     "BOT_TOKEN",
     "MONGO_URL",
     "BLOXLINK_API_KEY",
-    "LINEAR_API_KEY",
 )
 
 for secret in VALID_SECRETS:

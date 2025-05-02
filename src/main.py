@@ -6,7 +6,7 @@ from discord import AllowedMentions, Intents, utils
 
 from resources.constants import MODULES
 from resources.helper_bot import HelperBot
-from resources.secrets import BOT_TOKEN, LINEAR_API_KEY, MONGO_URL  # pylint: disable=E0611 # type: ignore
+from resources.secrets import BOT_TOKEN, MONGO_URL  # pylint: disable=E0611 # type: ignore
 
 # cspell: disable-next-line
 logging.basicConfig(format="[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s", level=logging.INFO)
@@ -25,7 +25,6 @@ async def main():
         mongodb_url=MONGO_URL,
         intents=intents,
         allowed_mentions=allowed_mentions,
-        linear_api_key=LINEAR_API_KEY,
         modules=MODULES,
         sync_commands=(not args.no_sync),
     )
