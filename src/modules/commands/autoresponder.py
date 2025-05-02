@@ -19,35 +19,6 @@ from resources.models.autoresponse import AutoResponse
 from resources.models.interaction_data import MessageComponentData
 from resources.utils.base_embeds import ErrorEmbed, StandardEmbed
 
-"""
-Potential DB structure:
-- Id or name to refer to the responder as - common name
-- triggers (list of strings)
-- message
-- auto delete
----
-
-Special characters: 
-    * = prefix/suffix matching of a string
-    ... = large partial matching (so start-end and it would match "really start wow some random stuff end whee")
-        just represents "lots of content" between the start word and the end
-        ! cannot be used with prefix/suffix matching in the same trigger string.
-        ! cannot be used multiple times in one trigger string.
-    , = splits trigger to different words that MUST uniquely exist in the string.
-
-cspell: disable
-Example valid triggers:
-    "verify"
-    "help pls" - must show up exactly as "help pls" in the message (case insensitive)
-    "ban*" - matches "ban", "banned", "banning", etc
-    "how...verify" (or "how ... verify") - matches "how verify", "how do i verify", "how john cena verify?", "how can i averify"
-        but not "verify how" or "verify pls how", nor "hob do i verbify"
-    "how, join" - matches "how do i join bloxlink", "how cna i join", but not "how can i joine", "join pls", "how play", "howjoin"
-
-Asterisks in the middle of phrases (i.e. "how*join") shall not be treated as partial matching options.
-cspell: enable
-"""
-
 MAX_ITEMS_PER_PAGE = 10
 RESPONSE_COOLDOWN = 10  # seconds
 
@@ -288,10 +259,11 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         description = (
             "> Welcome! This guide is going to teach you some of the things to know about the /autoresponder commands.",
-            "Firstly, some key terms for the slash commands.",
+            "Firstly, some key information for the slash commands.",
             '- "Message" - This is the response that the bot will send.',
             '- "Trigger" - This is what we call a string that the bot will look for in a user sent message.',
-            "> Trigger string usage is shown below. If you have more questions, ask Nub for clarification!",
+            "- **All triggers are case-insensitive!**",
+            "> Further trigger string usage is shown below. If you have more questions, ask Nub for clarification!",
         )
         embed.description = "\n".join(description)
 
@@ -301,6 +273,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 f"- `{resp_parsing.SpecialChar.PARTIAL}` - Start and end of string partial matching.\n"
                 f"- `{resp_parsing.SpecialChar.EXPAND}` - Matches anything between two strings.\n"
                 f"- `{resp_parsing.SpecialChar.SPLIT}` - Splits the single trigger into individual segments that must ALL be found in the message."
+                f"- `{resp_parsing.SpecialChar.EXPLICIT}` - The user's message must EXACTLY MATCH this trigger string (excluding this character) (case-insensitive)."
             ),
         )
 
@@ -311,6 +284,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 f"- `{resp_parsing.SpecialChar.PARTIAL}` and `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used together.\n"
                 f"- `{resp_parsing.SpecialChar.EXPAND}` CANNOT be used multiple times."
                 f"- `{resp_parsing.SpecialChar.PARTIAL}` works ONLY at the beginning and end. Anywhere else it is treated as a literal `{resp_parsing.SpecialChar.PARTIAL}` character."
+                f"- ALL other special characters are **ignored** when `{resp_parsing.SpecialChar.EXPLICIT}` is at the start of the string."
             ),
         )
 
@@ -319,7 +293,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             value=(
                 f"- `*verify` - matches anything suffixed by verify\n - `verify*` - matches anything prefixed by verify\n - `*verify*` - matches anything prefixed or suffixed by verify,\n"
                 f"- `help ... banned` - matches anything between the words 'help' and 'banned' in a message. Good for requiring words in a specific order.\n"
-                f"- `help, ban*` - matches the words 'help' and any word suffixed with 'ban' in a message. Both must be found to match."
+                f"- `help, ban*` - matches the words 'help' and any word suffixed with 'ban' in a message. Both must be found to match.\n"
+                f"- `=help` or `= help` - Message must exactly equal the word 'help'\n"
+                f"- `=How do I verify` - Message must exactly equal the phrase 'how do I verify' (case-insensitive)"
             ),
             inline=False,
         )

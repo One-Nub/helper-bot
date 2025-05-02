@@ -96,3 +96,22 @@ def test_split_trigger(trigger_str: str, expected):
 )
 def test_absolute_trigger(trigger_str: str, expected):
     assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == expected
+
+
+@pytest.mark.parametrize(
+    "trigger_str,expected",
+    [
+        (
+            "=help I can't verify every time i try i get a message saying you need to verify your account am i banned",
+            True,
+        ),
+        (
+            "= help I can't verify every time i try i get a message saying you need to verify your account am i banned",
+            True,
+        ),
+        ("=help", False),
+        ("= help", False),
+    ],
+)
+def test_explicit_trigger(trigger_str: str, expected):
+    assert tr.search_message_match(message=BASE_MESSAGE, initial_trigger=trigger_str) == expected

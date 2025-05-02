@@ -37,6 +37,11 @@ class SpecialChar(StrEnum):
         "we ... farmers", dum" - would match "we are farmers bum ba dum ba dum dum dum"
     """
 
+    EXPLICIT = "="
+    """When placed at the start of a trigger string, makes it so that the message given must EXACTLY match
+    the trigger string following the character. Does not allow for substring matching.
+    """
+
 
 def search_message_match(*, message: str, initial_trigger: str) -> bool:
     """Search a message for a matching substring or trigger formatted string.
@@ -64,6 +69,9 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
 
 def _scan_message(*, message: str, trigger: str) -> bool:
     validate_trigger_string(trigger)
+
+    if trigger.startswith(SpecialChar.EXPLICIT):
+        return message == _clean_trigger(trigger)
 
     # Handle expansion
     if SpecialChar.EXPAND in trigger:
@@ -100,11 +108,15 @@ def _scan_message(*, message: str, trigger: str) -> bool:
 
 def _clean_trigger(trigger: str, *, regex_escape=False) -> str:
     """Removes asterisks and leading+trailing white space. Optionally escapes regex special characters."""
-    if trigger.startswith(SpecialChar.PARTIAL):
-        trigger = trigger[1:]
+    if trigger.startswith(SpecialChar.EXPLICIT):
+        trigger = trigger[len(SpecialChar.EXPLICIT) :]
+    else:
+        # to prevent additional characters from being stripped when SpecialChar.EXPLICIT is passed.
+        if trigger.startswith(SpecialChar.PARTIAL):
+            trigger = trigger[len(SpecialChar.PARTIAL) :]
 
-    if trigger.endswith(SpecialChar.PARTIAL):
-        trigger = trigger[:-1]
+        if trigger.endswith(SpecialChar.PARTIAL):
+            trigger = trigger[: -len(SpecialChar.PARTIAL)]
 
     trigger = trigger.strip()
     if regex_escape:
