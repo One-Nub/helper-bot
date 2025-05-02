@@ -26,9 +26,6 @@ from .shared_cache import stored_trigger_map
 MAX_ITEMS_PER_PAGE = 10
 
 
-# TODO: consider moving autoresponder to a subfolder, and moving modals into their own files.
-
-
 @app_commands.guild_only()
 class Autoresponder(commands.GroupCog, name="autoresponder"):
     def __init__(self, bot):
