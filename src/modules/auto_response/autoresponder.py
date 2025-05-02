@@ -20,134 +20,17 @@ from resources.models.interaction_data import MessageComponentData
 from resources.utils.base_embeds import ErrorEmbed, StandardEmbed
 from resources.utils.timed_user_cooldown import TimedUserCooldown
 
+from .modals import MessageEditModal, NewResponderModal
+from .shared_cache import stored_trigger_map
+
 MAX_ITEMS_PER_PAGE = 10
 
 
 # TODO: consider moving autoresponder to a subfolder, and moving modals into their own files.
-class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
-    def __init__(self, *, timeout: float | None = None, custom_id: str) -> None:
-        super().__init__(timeout=timeout, custom_id=custom_id)
-
-    trigger_string: discord.ui.TextInput = discord.ui.TextInput(
-        label="Text to trigger response", custom_id="trigger_str", row=0
-    )
-    response_msg: discord.ui.TextInput = discord.ui.TextInput(
-        label="Message to send in response", custom_id="message_str", row=1, style=discord.TextStyle.paragraph
-    )
-
-    async def on_submit(self, interaction: discord.Interaction) -> None:
-        if interaction.data is None:
-            logging.error("Attempted to respond to request with no interaction data.")
-            return
-
-        custom_id: str = str(interaction.data.get("custom_id"))
-        custom_data = custom_id.split(":")
-        custom_data.pop(0)  # remove "mcr" segment
-
-        author_id = custom_data[0]
-        responder_name = custom_data[1]
-        auto_delete = int(custom_data[2])
-
-        resp_parsing.validate_trigger_string(self.trigger_string.value)
-
-        if type(interaction.client) is not HelperBot:
-            logging.error("Client wasn't the same as the main instance.")
-            return
-
-        bot: HelperBot = interaction.client
-        await bot.db.update_autoresponse(
-            responder_name,
-            response_message=self.response_msg.value,
-            message_triggers=[self.trigger_string.value],
-            author=author_id,
-            auto_deletion=auto_delete,
-        )
-        Autoresponder.stored_trigger_map.clear()
-
-        ar = AutoResponse(
-            name=responder_name,
-            response_message=self.response_msg.value,
-            author=author_id,
-            message_triggers=[self.trigger_string.value],
-            auto_deletion=auto_delete,
-        )
-
-        await interaction.response.send_message(
-            (
-                f"Success! Your new auto responder has been saved.\n"
-                "*If you want to add more trigger strings, use `/autoresponder trigger add`*"
-            ),
-            embed=ar.embed.set_footer(text="Bloxlink Helper", icon_url=interaction.user.display_avatar),
-        )
-
-    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
-        if type(error) == InvalidTriggerFormat:
-            embed = ErrorEmbed(footer_icon_url=str(interaction.user.display_avatar))
-            embed.title = ":BloxlinkDead: Invalid Trigger String."
-            embed.add_field(name="Trigger string:", value=self.trigger_string.value)
-
-            # Not using AutoResponse class bc we would have to parse the name out and stuff again.
-            clean_message = self.response_msg.value.replace("```", r"\`\`\`")
-            embed.add_field(name="Message:", value=f"```{clean_message}```")
-
-            await interaction.response.send_message(embed=embed)
-        else:
-            await interaction.response.send_message(
-                "An unexpected error occurred. A log has been left for the devs 🫡"
-            )
-            return await super().on_error(interaction, error)
-
-
-class MessageEditModal(discord.ui.Modal, title="Update Message"):
-    def __init__(self, *, timeout: float | None = None, custom_id: str) -> None:
-        super().__init__(timeout=timeout, custom_id=custom_id)
-
-    response_msg: discord.ui.TextInput = discord.ui.TextInput(
-        label="Message to send in response", custom_id="message_str", row=1, style=discord.TextStyle.paragraph
-    )
-
-    async def on_submit(self, interaction: discord.Interaction) -> None:
-        if interaction.data is None:
-            logging.error("Attempted to respond to request with no interaction data.")
-            return
-
-        custom_id: str = str(interaction.data.get("custom_id"))
-        custom_data = custom_id.split(":")
-        custom_data.pop(0)  # remove "med" segment
-
-        author_id = custom_data[0]
-        responder_name = custom_data[1]
-
-        if type(interaction.client) is not HelperBot:
-            logging.error("Client wasn't the same as the main instance.")
-            return
-
-        bot: HelperBot = interaction.client
-        await bot.db.update_autoresponse(
-            responder_name,
-            response_message=self.response_msg.value,
-            author=author_id,
-        )
-        Autoresponder.stored_trigger_map.clear()
-
-        ar = AutoResponse(name=responder_name, response_message=self.response_msg.value, author=author_id)
-        embed = StandardEmbed(footer_icon_url=str(interaction.user.display_avatar))
-        embed.title = f":BloxlinkHappy: Success! Auto responder `{responder_name}` has been updated."
-        embed.add_field(name="New Message:", value=ar.codeblock_response_msg)
-
-        await interaction.response.send_message(embed=embed)
-
-    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
-        await interaction.response.send_message(
-            "An unexpected error occurred. A log has been left for the devs 🫡"
-        )
-        return await super().on_error(interaction, error)
 
 
 @app_commands.guild_only()
 class Autoresponder(commands.GroupCog, name="autoresponder"):
-    stored_trigger_map: dict[str, AutoResponse] = dict()
-
     def __init__(self, bot):
         self.bot: HelperBot = bot
         self.cooldown = TimedUserCooldown()
@@ -162,7 +45,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         if message.author.bot:
             return
 
-        if not self.stored_trigger_map:
+        if not stored_trigger_map:
             # Update local map.
             logging.info("Updating the stored trigger map...")
             auto_responses = await self.bot.db.get_all_autoresponses()
@@ -170,9 +53,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
             for ar in auto_responses:
                 for tr in ar.message_triggers:
-                    self.stored_trigger_map[tr] = ar
+                    stored_trigger_map[tr] = ar
             logging.info(
-                f"Stored trigger map updated. There are now {len(self.stored_trigger_map)} values in the map."
+                f"Stored trigger map updated. There are now {len(stored_trigger_map)} values in the map."
             )
 
         # Ignore messages that start with the bot prefix (.)
@@ -180,7 +63,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         if message.content.startswith(str(self.bot.command_prefix)):
             return
 
-        for key, val in self.stored_trigger_map.items():
+        for key, val in stored_trigger_map.items():
             check_match = resp_parsing.search_message_match(message=message.content, initial_trigger=key)
             if not check_match:
                 continue
@@ -529,7 +412,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         ar.message_triggers.append(trigger)
         await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
-        self.stored_trigger_map.clear()
+        stored_trigger_map.clear()
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
         embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
@@ -566,7 +449,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
             ar.message_triggers.remove(trigger)
             await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
-            self.stored_trigger_map.clear()
+            stored_trigger_map.clear()
 
             embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
             embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
@@ -686,7 +569,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
 
         await self.bot.db.update_autoresponse(name, author=str(ctx.user.id), auto_deletion=duration)
-        self.stored_trigger_map.clear()
+        stored_trigger_map.clear()
 
         response = (
             "Message and reply do not auto delete after responding."
