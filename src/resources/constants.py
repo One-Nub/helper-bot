@@ -3,8 +3,9 @@ MODULES = ["commands", "events", "premium_support"]
 BLURPLE = 0x5865F2
 RED = 0xD14538
 
-UNICODE_LEFT = "\u276e"
-UNICODE_RIGHT = "\u276f"
+UNICODE_LEFT = "\u276e"  # left chevron, used for pagination
+UNICODE_RIGHT = "\u276f"  # right chevron, used for pagination
+UNICODE_RIGHT_ALT = "\u279c"  # used in /autoresponder all
 UNICODE_ZERO_WIDTH_SPACE = "\u200b"
 
 TRIAL_ROLE = 818919735193632858

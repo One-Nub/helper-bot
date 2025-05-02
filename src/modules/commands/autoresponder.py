@@ -11,7 +11,7 @@ from textdistance import Sorensen
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
-from resources.constants import RED, UNICODE_LEFT, UNICODE_RIGHT
+from resources.constants import RED, UNICODE_LEFT, UNICODE_RIGHT, UNICODE_RIGHT_ALT
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 from resources.helper_bot import instance as bot_instance
@@ -346,8 +346,13 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         trigger_strings = []
         for ar in selected_items:
-            trigger_strings.append(f"- {ar.name} -> `{ar.message_triggers}`")
-        embed.description = "\n".join(trigger_strings)
+            message_triggers = [f"`{discord.utils.escape_markdown(tr)}`" for tr in ar.message_triggers]
+            message_tr_str = ", ".join(message_triggers)
+
+            trigger_strings.append(f"- {ar.name} {UNICODE_RIGHT_ALT} \n\t{message_tr_str}")
+        embed.description = f"> ***<Responder Name> {UNICODE_RIGHT_ALT} <Trigger Strings>***\n" + "\n".join(
+            trigger_strings
+        )
 
         # footer
         embed.set_footer(text=f"Page {page_num + 1}/{max_pages}", icon_url=avatar_url)
