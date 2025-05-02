@@ -154,8 +154,8 @@ class MongoDB:
         """
         logger.info("Connecting to MongoDB.")
         self.client = motor_asyncio.AsyncIOMotorClient(connection_string, tlsCAFile=certifi.where())
-        self.db = self.client["bloxlink_helper"]
-        logger.info("MongoDB initialized.")
+        self.db = self.client.get_default_database("bloxlink_helper")
+        logger.info(f"MongoDB initialized. Connected to database {self.db.name}")
 
     ####
     ####################---------TAG METHODS-----------########################
