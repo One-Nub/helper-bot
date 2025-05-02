@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     pull_policy: build
-    restart: on-failure
+    restart: unless-stopped
     env_file: stack.env
     deploy:
       resources:
