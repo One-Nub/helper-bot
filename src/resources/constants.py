@@ -1,4 +1,4 @@
-MODULES = ["commands", "events", "premium_support"]
+MODULES = ["commands", "events", "premium_support", "auto_response"]
 
 BLURPLE = 0x5865F2
 RED = 0xD14538
