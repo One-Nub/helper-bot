@@ -1,4 +1,5 @@
 import logging
+import unicodedata
 
 import discord
 
@@ -81,7 +82,8 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
         responder_name = custom_data[1]
         auto_delete = int(custom_data[2])
 
-        resp_parsing.validate_trigger_string(self.trigger_string.value)
+        normalized_trigger_string = unicodedata.normalize("NFKC", self.trigger_string.value)
+        resp_parsing.validate_trigger_string(normalized_trigger_string)
 
         if type(interaction.client) is not HelperBot:
             logging.error("Client wasn't the same as the main instance.")
@@ -91,7 +93,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
         await bot.db.update_autoresponse(
             responder_name,
             response_message=self.response_msg.value,
-            message_triggers=[self.trigger_string.value],
+            message_triggers=[normalized_trigger_string],
             author=author_id,
             auto_deletion=auto_delete,
         )
@@ -101,7 +103,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             name=responder_name,
             response_message=self.response_msg.value,
             author=author_id,
-            message_triggers=[self.trigger_string.value],
+            message_triggers=[normalized_trigger_string],
             auto_deletion=auto_delete,
         )
 

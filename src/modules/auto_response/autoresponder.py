@@ -1,6 +1,6 @@
-import asyncio
 import logging
 import math
+import unicodedata
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -393,6 +393,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
 
         try:
+            trigger = unicodedata.normalize("NFKC", trigger)
             resp_parsing.validate_trigger_string(trigger)
         except InvalidTriggerFormat as err:
             embed = ErrorEmbed(title=":BloxlinkDead: Invalid Trigger String")
@@ -437,6 +438,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
 
         if trigger:
+            trigger = unicodedata.normalize("NFKC", trigger)
             if trigger not in ar.message_triggers:
                 return await ctx.response.send_message(
                     f"Error! Could not find the trigger {trigger} for the auto responder {name}.",
