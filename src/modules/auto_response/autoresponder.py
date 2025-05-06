@@ -105,9 +105,13 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     ####
 
     async def name_autofill(self, interaction: discord.Interaction, user_input: str):
-        # TODO: Get from cache instead? Add helper methods for database somewhere?
-        auto_responses = await self.bot.db.get_all_autoresponses()
-        valid_names = [AutoResponse.from_database(ar).name for ar in auto_responses]
+        valid_names = []
+
+        if not stored_trigger_map:
+            auto_responses = await self.bot.db.get_all_autoresponses()
+            valid_names = [AutoResponse.from_database(ar).name for ar in auto_responses]
+        else:
+            valid_names = set(ar.name for ar in stored_trigger_map.values())
 
         if user_input == "":
             return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
@@ -115,6 +119,27 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         valid_names = [
             item
             for item in valid_names
+            if Sorensen().similarity(user_input, item) > 0.65 or user_input in item
+        ]
+        return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
+
+    async def trigger_autofill(self, interaction: discord.Interaction, user_input: str):
+        name_input = interaction.namespace.name
+        if not interaction.namespace.name:
+            return []
+
+        auto_response = await self.bot.db.get_autoresponse(name_input)
+        if not auto_response:
+            return []
+
+        valid_triggers = AutoResponse.from_database(auto_response).message_triggers
+
+        if user_input == "":
+            return [app_commands.Choice(name=name, value=name) for name in valid_triggers][:25]
+
+        valid_names = [
+            item
+            for item in valid_triggers
             if Sorensen().similarity(user_input, item) > 0.65 or user_input in item
         ]
         return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
@@ -435,7 +460,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         await ctx.response.send_message(embed=embed)
 
     @trigger_group.command(name="delete", description="Remove a message string that is responded to.")
-    @app_commands.autocomplete(name=name_autofill)
+    @app_commands.autocomplete(name=name_autofill, trigger=trigger_autofill)
     @app_commands.describe(
         name="The admin-facing name for the responder",
         trigger="Optionally directly say what trigger string to remove. Must exactly match.",
