@@ -301,8 +301,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         name="A unique admin-facing name for this responder",
         autodelete="How long (in seconds) until the bot vaporizes the original message and response?",
     )
-    @app_commands.autocomplete(name=name_autofill)
-    async def add_responder(
+    async def create_responder(
         self,
         ctx: discord.Interaction,
         name: app_commands.Range[str, 1, 50],
