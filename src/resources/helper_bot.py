@@ -456,3 +456,31 @@ class MongoDB:
         """
         name = name.lower()
         await self.db["auto_response"].delete_one({"_id": name})
+
+    async def get_all_allowlist_channels(
+        self,
+        guild_id: str,
+    ):
+        return await self.db["config"].find_one({"_id": str(guild_id)}, {"responder_channels": 1})
+
+    async def add_allowlist_channel(
+        self,
+        guild_id: str,
+        channel_id: str,
+    ):
+        await self.db["config"].update_one(
+            {"_id": str(guild_id)},
+            update={"$addToSet": {"responder_channels": str(channel_id)}},
+            upsert=True,
+        )
+
+    async def remove_allowlist_channel(
+        self,
+        guild_id: str,
+        channel_id: str,
+    ):
+        await self.db["config"].update_one(
+            {"_id": str(guild_id)},
+            update={"$pull": {"responder_channels": str(channel_id)}},
+            upsert=True,
+        )

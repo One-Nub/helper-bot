@@ -21,7 +21,7 @@ from resources.utils.base_embeds import ErrorEmbed, StandardEmbed
 from resources.utils.timed_user_cooldown import TimedUserCooldown
 
 from .modals import MessageEditModal, NewResponderModal
-from .shared_cache import stored_trigger_map
+from .shared_cache import autoresponder_channels, stored_trigger_map
 
 MAX_ITEMS_PER_PAGE = 10
 
@@ -39,7 +39,12 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @commands.Cog.listener("on_message")
     async def message_handler(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.bot or not message.guild:
+            return
+
+        # Ignore messages that start with the bot prefix (.)
+        # Could false positive on a chat command otherwise.
+        if message.content.startswith(str(self.bot.command_prefix)):
             return
 
         if not stored_trigger_map:
@@ -55,9 +60,21 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
                 f"Stored trigger map updated. There are now {len(stored_trigger_map)} values in the map."
             )
 
-        # Ignore messages that start with the bot prefix (.)
-        # Could false positive on a chat command otherwise.
-        if message.content.startswith(str(self.bot.command_prefix)):
+        guild_id = str(message.guild.id)
+        channel_id = str(message.channel.id)
+        if not autoresponder_channels.get(guild_id):
+            # Update local dict.
+            logging.info("Updating stored auto responder channel map...")
+            data = await self.bot.db.get_all_allowlist_channels(guild_id)
+            channels = data.get("responder_channels", []) if data else []
+
+            autoresponder_channels[guild_id] = set(channels)
+
+            logging.info(
+                f"Stored autoresponder channel list updated. There are now {len(autoresponder_channels)} values in the set."
+            )
+
+        if channel_id not in autoresponder_channels[guild_id]:
             return
 
         for key, val in stored_trigger_map.items():
@@ -577,6 +594,57 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
         embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
         embed.add_field(name="Changes:", value=response)
+        await ctx.response.send_message(embed=embed)
+
+    ####
+    ####################---------CHANNEL ALLOWLIST-----------########################
+    ####
+
+    channel_allowlist_group = app_commands.Group(
+        name="channel", description="Manage channels that the auto responder will respond in."
+    )
+
+    @channel_allowlist_group.command(
+        name="toggle", description="Toggle if the bot will respond to messages in a channel or not."
+    )
+    async def channel_toggle(self, ctx: discord.Interaction, channel: discord.TextChannel):
+        data = await self.bot.db.get_all_allowlist_channels(str(ctx.guild_id))
+        channels = data.get("responder_channels", []) if data else []
+
+        added = True
+        if channels and str(channel.id) in channels:
+            added = False
+            await self.bot.db.remove_allowlist_channel(str(ctx.guild_id), str(channel.id))
+            # Clear the entire dict, would be probably poor if we were in hundreds or thousands of guilds
+            # but we ain't so this is fine lol
+            autoresponder_channels.clear()
+        else:
+            await self.bot.db.add_allowlist_channel(str(ctx.guild_id), str(channel.id))
+            autoresponder_channels.clear()
+
+        embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
+        embed.title = f":BloxlinkHappy: Success!"
+        embed.description = (
+            f"The bot will now automatically respond to messages in <#{channel.id}> ({channel.id})."
+            if added
+            else f"The bot will no longer respond to messages in <#{channel.id}> ({channel.id})"
+        )
+        await ctx.response.send_message(embed=embed)
+
+    @channel_allowlist_group.command(name="view", description="See channels the bot will respond in.")
+    async def view_channels(self, ctx: discord.Interaction):
+        data = await self.bot.db.get_all_allowlist_channels(str(ctx.guild_id))
+
+        channels = data.get("responder_channels", []) if data else []
+        channels = [f"<#{x}> ({x})" for x in channels]
+
+        embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
+        embed.title = f":BloxlinkDetective: Allow Listed Channels!"
+        embed.description = (
+            ("-# I will respond to messages in these channels in this guild!\n-----\n" + "\n".join(channels))
+            if channels
+            else "No channels are explicitly permitted! I won't respond to any messages in this guild :BloxlinkMask:"
+        )
         await ctx.response.send_message(embed=embed)
 
 
