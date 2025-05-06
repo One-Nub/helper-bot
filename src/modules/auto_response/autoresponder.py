@@ -504,7 +504,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         view = discord.ui.View(timeout=None)
         view.add_item(select_menu)
 
-        await ctx.response.send_message(content="Select a trigger to remove!", view=view)
+        await ctx.response.send_message(
+            content="Select a trigger to remove!\n-# This prompt will disable itself in 5 minutes.", view=view
+        )
 
     @bot_instance.register_select_menu_handler("tr-del")
     @staticmethod
