@@ -4,22 +4,27 @@ import discord
 import requests
 from discord.ext.commands import Context, check
 
-from resources.checks import is_staff_or_trial
-from resources.constants import BLURPLE, RED
+from resources.checks import is_hr, is_staff_or_trial
+from resources.constants import BLOXLINK_GUILD, BLURPLE, RED, TEAM_CENTER_GUILD
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
-from resources.secrets import BLOXLINK_API_KEY  # pylint: disable=E0611
-
-BLOXLINK_GUILD = 372036754078826496
+from resources.secrets import BLOXLINK_API_KEY  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @bot.command("api", description="Fetch information via Bloxlink API.")
 @check(is_staff_or_trial)
 async def api(ctx: Context, lookup_id: int = 0):
     """Fetch information from the Bloxlink API!"""
+    if not ctx.guild:
+        raise HelperError("This command can only be used in a server!")
 
     if ctx.guild.id != BLOXLINK_GUILD:
-        raise HelperError("This command can only be used in the Bloxlink HQ Server!")
+        check_hr = await is_hr(ctx)
+        if not check_hr:
+            raise HelperError("This command can only be used in the Bloxlink HQ Server!")
+
+        if ctx.guild.id != TEAM_CENTER_GUILD:
+            raise HelperError("This command can only be used in Bloxlink related guilds!")
 
     if lookup_id == 0:
         raise HelperError("Missing argument `id`. Please provide a valid Discord ID.")

@@ -3,6 +3,10 @@
         "agelimit",
         "aiohttp",
         "asgi",
+        "autodelete",
+        "Autoresponder",
+        "autoresponse",
+        "autoresponses",
         "blacksheep",
         "BLURPLE",
         "hikari",
@@ -13,6 +17,8 @@
         "Roblox",
         "roleset",
         "rolesets",
+        "Sorensen",
+        "textdistance",
         "uvicorn",
         "webserver"
     ],
@@ -27,7 +33,7 @@
         "**/.venv": true,
         "poetry.lock": true,
     },
-    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.typeCheckingMode": "standard",
     "pylint.args": [
         "--max-line-length=110",
         "--disable=C0413,C0103,C0114,C0301,W0603,W1203"

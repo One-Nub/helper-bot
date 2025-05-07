@@ -1,8 +1,7 @@
 import logging
 
-from discord import CustomActivity, Forbidden, Object, Status
+from discord import CustomActivity, Status
 
-from resources.constants import DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
 from resources.helper_bot import instance as bot
 
 
@@ -13,15 +12,7 @@ async def on_ready():
         status=Status.online,
     )
 
-    logging.info("Syncing slash commands...")
-    await bot.tree.sync()
-
-    logging.info("Syncing guild commands...")
-    guilds_to_sync = {*DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD}
-    for guild in guilds_to_sync:
-        try:
-            await bot.tree.sync(guild=Object(guild))
-        except Forbidden:
-            logging.warn(f"Could not sync guild commands for {guild}.")
-
-    logging.info(f"Bot ({bot.user.name}#{bot.user.discriminator}) has finished initializing!")
+    if bot.user:
+        logging.info(f"Bot ({bot.user.name}#{bot.user.discriminator}) has finished initializing!")
+    else:
+        logging.error("Bot is ready without being logged in. This is probably not intentional!")
