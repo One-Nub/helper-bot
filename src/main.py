@@ -1,8 +1,8 @@
 import argparse
-import asyncio
 import logging
 
-from discord import AllowedMentions, Intents, utils
+import uvloop
+from discord import AllowedMentions, Intents
 
 from resources.constants import MODULES
 from resources.helper_bot import HelperBot
@@ -33,4 +33,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvloop.run(main())
