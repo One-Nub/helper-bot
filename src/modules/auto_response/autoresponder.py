@@ -203,6 +203,12 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     async def view_all(self, ctx: discord.Interaction):
         auto_responses = await self.bot.db.get_all_autoresponses()
         auto_responses = [AutoResponse.from_database(x) for x in auto_responses]
+        if not auto_responses:
+            return await ctx.response.send_message(
+                content="There are no auto responders set! Try making one with /autoresponder create",
+                ephemeral=True,
+            )
+
         auto_responses.sort(key=(lambda y: y.name))
 
         # Determine max # of pages
