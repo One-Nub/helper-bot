@@ -11,7 +11,17 @@ from textdistance import Sorensen
 
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
-from resources.constants import RED, UNICODE_LEFT, UNICODE_RIGHT, UNICODE_RIGHT_ALT
+from resources.constants import (
+    BLOXLINK_DAB,
+    BLOXLINK_DEAD,
+    BLOXLINK_DETECTIVE,
+    BLOXLINK_HAPPY,
+    BLOXLINK_MASK,
+    RED,
+    UNICODE_LEFT,
+    UNICODE_RIGHT,
+    UNICODE_RIGHT_ALT,
+)
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 from resources.helper_bot import instance as bot_instance
@@ -151,7 +161,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
     @app_commands.command(name="help", description="Learn how to use the command!")
     async def command_help(self, ctx: discord.Interaction):
         embed = StandardEmbed(
-            title=":BloxlinkHappy: Auto Responder Guide", footer_icon_url=str(ctx.user.display_avatar)
+            title=f"{BLOXLINK_HAPPY} Auto Responder Guide", footer_icon_url=str(ctx.user.display_avatar)
         )
 
         description = (
@@ -378,7 +388,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
         ar = AutoResponse.from_database(responder)
         embed = ar.embed
-        embed.title = ":BloxlinkDab: Deleted Auto Responder Content"
+        embed.title = f"{BLOXLINK_DAB} Deleted Auto Responder Content"
         embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
         embed.color = RED
 
@@ -444,7 +454,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             trigger = unicodedata.normalize("NFKC", trigger)
             resp_parsing.validate_trigger_string(trigger)
         except InvalidTriggerFormat as err:
-            embed = ErrorEmbed(title=":BloxlinkDead: Invalid Trigger String")
+            embed = ErrorEmbed(title=f"{BLOXLINK_DEAD} Invalid Trigger String")
             embed.add_field(name="Error", value=str(err))
             embed.add_field(name="Trigger string", value=trigger)
             return await ctx.response.send_message(embed=embed)
@@ -460,7 +470,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         stored_trigger_map.clear()
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
-        embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
+        embed.title = f"{BLOXLINK_HAPPY} Success! Auto responder `{name}` has been updated."
         embed.add_field(name="New Trigger:", value=trigger)
         embed.add_field(name="Response:", value=ar.codeblock_response_msg)
         await ctx.response.send_message(embed=embed)
@@ -498,7 +508,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             stored_trigger_map.clear()
 
             embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
-            embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
+            embed.title = f"{BLOXLINK_HAPPY}: Success! Auto responder `{name}` has been updated."
             embed.add_field(name="Trigger Removed:", value=trigger)
             embed.add_field(name="From Response:", value=ar.codeblock_response_msg)
             return await ctx.response.send_message(embed=embed)
@@ -585,7 +595,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         output_str = "\n".join(formatted_selections)
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
-        embed.title = f":BloxlinkHappy: Success! Auto responder `{responder_name}` has been updated."
+        embed.title = f"{BLOXLINK_HAPPY} Success! Auto responder `{responder_name}` has been updated."
         embed.add_field(name="Removed Triggers:", value=output_str)
         embed.add_field(name="From Response:", value=ar.codeblock_response_msg)
 
@@ -625,7 +635,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             else f"Message and reply will now delete after {duration} seconds."
         )
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
-        embed.title = f":BloxlinkHappy: Success! Auto responder `{name}` has been updated."
+        embed.title = f"{BLOXLINK_HAPPY} Success! Auto responder `{name}` has been updated."
         embed.add_field(name="Changes:", value=response)
         await ctx.response.send_message(embed=embed)
 
@@ -656,7 +666,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             autoresponder_channels.clear()
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
-        embed.title = f":BloxlinkHappy: Success!"
+        embed.title = f"{BLOXLINK_HAPPY} Success!"
         embed.description = (
             f"The bot will now automatically respond to messages in <#{channel.id}> ({channel.id})."
             if added
@@ -672,11 +682,11 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         channels = [f"<#{x}> ({x})" for x in channels]
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
-        embed.title = f":BloxlinkDetective: Allow Listed Channels!"
+        embed.title = f"{BLOXLINK_DETECTIVE} Allow Listed Channels!"
         embed.description = (
             ("-# I will respond to messages in these channels in this guild!\n-----\n" + "\n".join(channels))
             if channels
-            else "No channels are explicitly permitted! I won't respond to any messages in this guild :BloxlinkMask:"
+            else f"No channels are explicitly permitted! I won't respond to any messages in this guild {BLOXLINK_MASK}"
         )
         await ctx.response.send_message(embed=embed)
 

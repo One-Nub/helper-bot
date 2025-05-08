@@ -5,7 +5,7 @@ import requests
 from discord.ext.commands import Context, check
 
 from resources.checks import is_hr, is_staff_or_trial
-from resources.constants import BLOXLINK_GUILD, BLURPLE, RED, TEAM_CENTER_GUILD
+from resources.constants import BLOXLINK_DEAD, BLOXLINK_GUILD, BLURPLE, RED, TEAM_CENTER_GUILD
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 from resources.secrets import BLOXLINK_API_KEY  # pyright: ignore[reportAttributeAccessIssue]
@@ -79,7 +79,7 @@ async def api_request_handler(user_id: int) -> tuple:
         req = requests.get(string, headers={"Authorization": BLOXLINK_API_KEY}, timeout=5)
         response = req.json()
     except (requests.ConnectionError, requests.HTTPError, requests.Timeout) as exc:
-        embed.title = "<:BloxlinkDead:823633973967716363> Error"
+        embed.title = f"{BLOXLINK_DEAD} Error"
         embed.description = f"An issue was encountered querying the Bloxlink api! - ({exc})"
         embed.color = RED
 

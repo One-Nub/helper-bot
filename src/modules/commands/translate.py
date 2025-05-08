@@ -5,7 +5,7 @@ from discord.ext.commands import Context, check
 from googletrans import Translator
 
 from resources.checks import is_staff_or_trial
-from resources.constants import BLURPLE
+from resources.constants import BLOXLINK_HAPPY, BLURPLE
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
@@ -23,7 +23,7 @@ async def translate(ctx: Context, *, translate_string: str = "0"):
     translation = translator.translate(translate_string, dest="en")
     translation_src = translation.src
     success_embed = discord.Embed()
-    success_embed.title = "<:BloxlinkHappy:823633735446167552> Translation Complete"
+    success_embed.title = f"{BLOXLINK_HAPPY} Translation Complete"
     success_embed.description = f"Processed text from `{translation_src}` (detected) to `en`\n\n**Translated Text:**\n```{translation.text}```"
     success_embed.color = BLURPLE
     success_embed.timestamp = datetime.now()
@@ -47,7 +47,7 @@ async def translate_menu(interaction: discord.Interaction, message: discord.Mess
     translation = translator.translate(message.content, dest="en")
 
     success_embed = discord.Embed()
-    success_embed.title = "<:BloxlinkHappy:823633735446167552> Translation Complete"
+    success_embed.title = f"{BLOXLINK_HAPPY} Translation Complete"
     success_embed.description = (
         f"Processed text from `{translation.src}` (detected) to "
         f"`en`\n\n**Translated Text:**\n```{translation.text}```"

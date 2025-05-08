@@ -15,7 +15,7 @@ from discord.ext.commands import (
 from textdistance import Sorensen
 
 from resources.checks import is_staff, is_staff_or_trial
-from resources.constants import BLURPLE, UNICODE_LEFT, UNICODE_RIGHT
+from resources.constants import BLOXLINK_HAPPY, BLURPLE, UNICODE_LEFT, UNICODE_RIGHT
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
@@ -197,7 +197,7 @@ async def tag_info(ctx: Context, name: str = "0"):
     tag_updated_at = datetime.fromisoformat(tag.get("updated_at", tag_created_at))
 
     embed = discord.Embed(
-        title=f"<:BloxlinkHappy:823633735446167552> Tag Info: {tag['_id']}",
+        title=f"{BLOXLINK_HAPPY} Tag Info: {tag['_id']}",
         description=f"**Content:** \n```{tag_content}```",
         color=BLURPLE,
     )

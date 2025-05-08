@@ -12,7 +12,7 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 
-from resources.constants import RED
+from resources.constants import BLOXLINK_DEAD, RED
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
@@ -30,7 +30,7 @@ async def on_command_error(ctx: Context, error: CommandError):
         return
 
     error_embed = discord.Embed(
-        title="<:BloxlinkDead:823633973967716363> Error",
+        title=f"{BLOXLINK_DEAD} Error",
         description=error,
         color=RED,
     )

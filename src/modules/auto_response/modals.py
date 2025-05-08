@@ -4,6 +4,7 @@ import unicodedata
 import discord
 
 import resources.responder_parsing as resp_parsing
+from resources.constants import BLOXLINK_DEAD, BLOXLINK_HAPPY
 from resources.exceptions import InvalidTriggerFormat
 from resources.helper_bot import HelperBot
 from resources.models.autoresponse import AutoResponse
@@ -46,7 +47,7 @@ class MessageEditModal(discord.ui.Modal, title="Update Message"):
 
         ar = AutoResponse(name=responder_name, response_message=self.response_msg.value, author=author_id)
         embed = StandardEmbed(footer_icon_url=str(interaction.user.display_avatar))
-        embed.title = f":BloxlinkHappy: Success! Auto responder `{responder_name}` has been updated."
+        embed.title = f"{BLOXLINK_HAPPY} Success! Auto responder `{responder_name}` has been updated."
         embed.add_field(name="New Message:", value=ar.codeblock_response_msg)
 
         await interaction.response.send_message(embed=embed)
@@ -118,7 +119,7 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         if type(error) == InvalidTriggerFormat:
             embed = ErrorEmbed(footer_icon_url=str(interaction.user.display_avatar))
-            embed.title = ":BloxlinkDead: Invalid Trigger String."
+            embed.title = f"{BLOXLINK_DEAD} Invalid Trigger String."
             embed.add_field(name="Trigger string:", value=self.trigger_string.value)
 
             # Not using AutoResponse class bc we would have to parse the name out and stuff again.

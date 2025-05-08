@@ -4,7 +4,7 @@ from typing import Optional
 import discord
 from attrs import Factory, define, field
 
-from resources.constants import UNICODE_ZERO_WIDTH_SPACE
+from resources.constants import BLOXLINK_HAPPY, UNICODE_ZERO_WIDTH_SPACE
 from resources.utils.base_embeds import StandardEmbed
 
 
@@ -32,7 +32,7 @@ class AutoResponse:
     @property
     def embed(self) -> discord.Embed:
         embed = StandardEmbed()
-        embed.title = f":BloxlinkHappy: Auto Responder Info: {self.name}"
+        embed.title = f"{BLOXLINK_HAPPY} Auto Responder Info: {self.name}"
 
         trigger_strings = [f"`{trigger_str}`" for trigger_str in self.message_triggers]
         final_trigger_string = ", ".join(trigger_strings)
