@@ -12,6 +12,7 @@ from textdistance import Sorensen
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
 from resources.constants import (
+    ADMIN_ROLES,
     BLOXLINK_DAB,
     BLOXLINK_DEAD,
     BLOXLINK_DETECTIVE,
@@ -49,7 +50,11 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
     @commands.Cog.listener("on_message")
     async def message_handler(self, message: discord.Message):
-        if message.author.bot or not message.guild:
+        if message.author.bot or not message.guild or not type(message.author) == discord.Member:
+            return
+
+        volunteers_role = ADMIN_ROLES["hq_volunteers"]
+        if volunteers_role in [x.id for x in message.author.roles]:
             return
 
         # Ignore messages that start with the bot prefix (.)
