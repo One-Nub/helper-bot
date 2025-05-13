@@ -18,6 +18,7 @@ from resources.constants import (
     BLOXLINK_DETECTIVE,
     BLOXLINK_HAPPY,
     BLOXLINK_MASK,
+    GREEN,
     RED,
     UNICODE_LEFT,
     UNICODE_RIGHT,
@@ -96,6 +97,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             check_match = resp_parsing.search_message_match(message=message.content, initial_trigger=key)
             if not check_match:
                 continue
+
+            if not val.enabled:
+                return
 
             # We only ignore on a match since it applies cooldown after checking and not on cooldown.
             user_on_cooldown = self.cooldown.check_for_user(user_id=message.author.id)
@@ -400,6 +404,32 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         await self.bot.db.delete_autoresponse(name=name)
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was removed.", embed=embed
+        )
+
+    @app_commands.command(name="toggle", description="Enable or disable an automatic response")
+    @app_commands.describe(name="The admin-facing name for the responder")
+    @app_commands.autocomplete(name=name_autofill)
+    async def toggle_responder(self, ctx: discord.Interaction, name: str):
+        responder = await self.bot.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"Could not find the responder associated with the name `{name}`! No changes were made.",
+                ephemeral=True,
+            )
+
+        ar = AutoResponse.from_database(responder)
+        ar.enabled = not ar.enabled
+        await self.bot.db.update_autoresponse(name, enabled=ar.enabled)
+
+        embed = ar.embed
+        embed.title = f"{BLOXLINK_DAB} Auto Responder Information"
+        embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
+        embed.color = RED if ar.enabled else GREEN
+
+        await self.bot.db.delete_autoresponse(name=name)
+        await ctx.response.send_message(
+            f"Success! The responder associated with the name `{name}` was {'enabled' if ar.enabled else 'disabled'}.",
+            embed=embed,
         )
 
     ####

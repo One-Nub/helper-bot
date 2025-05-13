@@ -387,6 +387,7 @@ class MongoDB:
         message_triggers: Optional[list[str]] = None,
         author: Optional[str] = None,
         auto_deletion: Optional[int] = None,
+        enabled: Optional[bool] = None,
     ):
         """Insert or update an auto responder in the database based on its name.
 
@@ -415,6 +416,9 @@ class MongoDB:
 
         if auto_deletion is not None and auto_deletion >= 0:
             data["auto_deletion"] = auto_deletion
+
+        if enabled is not None:
+            data["enabled"] = enabled
 
         if not data:
             logger.warning(f"No data was found when updating the auto response {name}.")
