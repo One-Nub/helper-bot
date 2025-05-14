@@ -72,6 +72,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             for ar in auto_responses:
                 for tr in ar.message_triggers:
                     stored_trigger_map[tr] = ar
+
             logging.info(
                 f"Stored trigger map updated. There are now {len(stored_trigger_map)} values in the map."
             )
@@ -94,16 +95,19 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             return
 
         for key, val in stored_trigger_map.items():
+            if not val.enabled:
+                # keep checking the rest for a match.
+                continue
+
             check_match = resp_parsing.search_message_match(message=message.content, initial_trigger=key)
             if not check_match:
                 continue
 
-            if not val.enabled:
-                return
-
             # We only ignore on a match since it applies cooldown after checking and not on cooldown.
+            # consider doing a channel cooldown instead/additionally?
             user_on_cooldown = self.cooldown.check_for_user(user_id=message.author.id)
             if user_on_cooldown:
+                logging.info(f"Not responding to {message.author.name} as they are on cooldown.")
                 return
 
             reply_msg = await message.reply(
@@ -402,6 +406,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed.color = RED
 
         await self.bot.db.delete_autoresponse(name=name)
+        stored_trigger_map.clear()
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was removed.", embed=embed
         )
@@ -424,9 +429,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed = ar.embed
         embed.title = f"{BLOXLINK_DAB} Auto Responder Information"
         embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
-        embed.color = RED if ar.enabled else GREEN
+        embed.color = GREEN if ar.enabled else RED
 
-        await self.bot.db.delete_autoresponse(name=name)
+        stored_trigger_map.clear()
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was {'enabled' if ar.enabled else 'disabled'}.",
             embed=embed,
