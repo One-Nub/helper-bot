@@ -55,7 +55,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             return
 
         volunteers_role = ADMIN_ROLES["hq_volunteers"]
-        if volunteers_role in [x.id for x in message.author.roles]:
+        dev_role = ADMIN_ROLES["dev"]
+        author_roles = [x.id for x in message.author.roles]
+        if volunteers_role in author_roles or dev_role in author_roles:
             return
 
         # Ignore messages that start with the bot prefix (.)
