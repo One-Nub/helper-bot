@@ -21,6 +21,7 @@ class AutoResponse:
     author: str = field(converter=str)
     message_triggers: list[str] = field(default=Factory(list))
     auto_deletion: Optional[int] = field(converter=default2int, default=0)
+    enabled: Optional[bool] = field(default=True)
 
     @classmethod
     def from_database(cls, data: dict):
@@ -48,6 +49,7 @@ class AutoResponse:
             ),
         )
         embed.add_field(name="Author", value=f"<@{self.author}> ({self.author})")
+        embed.add_field(name="Enabled", value="Yes" if self.enabled else "No")
 
         return embed
 
@@ -74,4 +76,5 @@ class AutoResponse:
             f"\n__Trigger Strings__: ```{self.message_triggers}```"
             f"\n__Message__: ```{self.response_message}```"
             f"\n__Auto Deletion Time__: ```{auto_del_str}```"
+            f"\n__Enabled?__: ```{self.enabled}```"
         )

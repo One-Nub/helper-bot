@@ -1,6 +1,8 @@
 MODULES = ["commands", "events", "premium_support", "auto_response"]
 
 BLURPLE = 0x5865F2
+GREEN = 0x69C273
+YELLOW = 0xFFC551
 RED = 0xD14538
 
 UNICODE_LEFT = "\u276e"  # left chevron, used for pagination

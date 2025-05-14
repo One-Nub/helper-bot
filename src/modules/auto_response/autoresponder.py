@@ -18,6 +18,7 @@ from resources.constants import (
     BLOXLINK_DETECTIVE,
     BLOXLINK_HAPPY,
     BLOXLINK_MASK,
+    GREEN,
     RED,
     UNICODE_LEFT,
     UNICODE_RIGHT,
@@ -71,6 +72,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             for ar in auto_responses:
                 for tr in ar.message_triggers:
                     stored_trigger_map[tr] = ar
+
             logging.info(
                 f"Stored trigger map updated. There are now {len(stored_trigger_map)} values in the map."
             )
@@ -93,13 +95,19 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             return
 
         for key, val in stored_trigger_map.items():
+            if not val.enabled:
+                # keep checking the rest for a match.
+                continue
+
             check_match = resp_parsing.search_message_match(message=message.content, initial_trigger=key)
             if not check_match:
                 continue
 
             # We only ignore on a match since it applies cooldown after checking and not on cooldown.
+            # consider doing a channel cooldown instead/additionally?
             user_on_cooldown = self.cooldown.check_for_user(user_id=message.author.id)
             if user_on_cooldown:
+                logging.info(f"Not responding to {message.author.name} as they are on cooldown.")
                 return
 
             reply_msg = await message.reply(
@@ -398,8 +406,35 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed.color = RED
 
         await self.bot.db.delete_autoresponse(name=name)
+        stored_trigger_map.clear()
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was removed.", embed=embed
+        )
+
+    @app_commands.command(name="toggle", description="Enable or disable an automatic response")
+    @app_commands.describe(name="The admin-facing name for the responder")
+    @app_commands.autocomplete(name=name_autofill)
+    async def toggle_responder(self, ctx: discord.Interaction, name: str):
+        responder = await self.bot.db.get_autoresponse(name=name)
+        if responder is None:
+            return await ctx.response.send_message(
+                f"Could not find the responder associated with the name `{name}`! No changes were made.",
+                ephemeral=True,
+            )
+
+        ar = AutoResponse.from_database(responder)
+        ar.enabled = not ar.enabled
+        await self.bot.db.update_autoresponse(name, enabled=ar.enabled)
+
+        embed = ar.embed
+        embed.title = f"{BLOXLINK_DAB} Auto Responder Information"
+        embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
+        embed.color = GREEN if ar.enabled else RED
+
+        stored_trigger_map.clear()
+        await ctx.response.send_message(
+            f"Success! The responder associated with the name `{name}` was {'enabled' if ar.enabled else 'disabled'}.",
+            embed=embed,
         )
 
     ####
@@ -578,7 +613,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         if not selections:
             return await ctx.response.send_message(f"Error! No selections were found.", ephemeral=True)
 
-        if len(selections) == len(ar.message_triggers):
+        if len(selections) >= len(ar.message_triggers):
             return await ctx.response.send_message(
                 f"Error! You can't remove all of the trigger strings.", ephemeral=True
             )
@@ -589,7 +624,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         for sel in selections:
             output = set()
             for items in ar.message_triggers:
-                if not items.startswith(sel):
+                if not items[:99] == sel[:99]:
                     output.add(items)
             major_output.append(output)
 
