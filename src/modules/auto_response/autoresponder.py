@@ -613,7 +613,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         if not selections:
             return await ctx.response.send_message(f"Error! No selections were found.", ephemeral=True)
 
-        if len(selections) == len(ar.message_triggers):
+        if len(selections) >= len(ar.message_triggers):
             return await ctx.response.send_message(
                 f"Error! You can't remove all of the trigger strings.", ephemeral=True
             )
@@ -624,7 +624,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         for sel in selections:
             output = set()
             for items in ar.message_triggers:
-                if not items.startswith(sel):
+                if not items[:99] == sel[:99]:
                     output.add(items)
             major_output.append(output)
 
