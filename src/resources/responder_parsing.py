@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from resources.exceptions import InvalidTriggerFormat
 
+COMMON_PUNCTUATION = {",", ".", "?", "!"}
+
 
 class SpecialChar(StrEnum):
     """Special characters that can be used for a trigger string."""
@@ -54,6 +56,8 @@ def search_message_match(*, message: str, initial_trigger: str) -> bool:
         bool: If the given trigger string found a match.
     """
     message = message.lower()
+    for punc in COMMON_PUNCTUATION:
+        message = message.replace(punc, "")
     initial_trigger = initial_trigger.lower()
 
     trigger_segments = (
@@ -107,7 +111,8 @@ def _scan_message(*, message: str, trigger: str) -> bool:
 
 
 def _clean_trigger(trigger: str, *, regex_escape=False) -> str:
-    """Removes asterisks and leading+trailing white space. Optionally escapes regex special characters."""
+    """Removes asterisks and leading+trailing white space. Optionally escapes regex special characters.
+    Also removes common punctiation: ".", ",", "?", "!" """
     if trigger.startswith(SpecialChar.EXPLICIT):
         trigger = trigger[len(SpecialChar.EXPLICIT) :]
     else:
