@@ -36,13 +36,14 @@ from .modals import MessageEditModal, NewResponderModal
 from .shared_cache import autoresponder_channels, stored_trigger_map
 
 MAX_ITEMS_PER_PAGE = 10
+COOLDOWN_DURATION = 30
 
 
 @app_commands.guild_only()
 class Autoresponder(commands.GroupCog, name="autoresponder"):
     def __init__(self, bot):
         self.bot: HelperBot = bot
-        self.cooldown = TimedUserCooldown()
+        self.cooldown = TimedUserCooldown(COOLDOWN_DURATION)
         super().__init__()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:  # type: ignore
