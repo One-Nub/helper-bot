@@ -21,6 +21,7 @@ class DevAutoresponder(commands.GroupCog, name="dev_autoresponder"):
             or not message.guild
             or not type(message.author) == discord.Member
             or not message.reference
+            or not message.mentions
         ):
             return
 
@@ -39,6 +40,11 @@ class DevAutoresponder(commands.GroupCog, name="dev_autoresponder"):
             return
 
         if type(referenced_message.author) == discord.User:
+            return
+
+        print(message.mentions)
+        if referenced_message.author.id not in [x.id for x in message.mentions]:
+            # message contained a mention, but it likely is not on the message reply
             return
 
         ref_author_roles = [x.id for x in referenced_message.author.roles]  # type: ignore
