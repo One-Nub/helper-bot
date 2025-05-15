@@ -42,7 +42,6 @@ class DevAutoresponder(commands.GroupCog, name="dev_autoresponder"):
         if type(referenced_message.author) == discord.User:
             return
 
-        print(message.mentions)
         if referenced_message.author.id not in [x.id for x in message.mentions]:
             # message contained a mention, but it likely is not on the message reply
             return
