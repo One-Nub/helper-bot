@@ -82,7 +82,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         guild_id = str(message.guild.id)
         channel_id = str(message.channel.id)
-        if not autoresponder_channels.get(guild_id):
+        if autoresponder_channels.get(guild_id) is None:
             # Update local dict.
             logging.info(f"Updating stored auto responder channel map for guild {guild_id}...")
             data = await self.bot.db.get_all_allowlist_channels(guild_id)
