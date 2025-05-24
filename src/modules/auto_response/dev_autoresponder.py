@@ -39,14 +39,22 @@ class DevAutoresponder(commands.GroupCog, name="dev_autoresponder"):
             # Let helpers & admins bypass it.
             return
 
-        if type(referenced_message.author) == discord.User:
+        referenced_author = referenced_message.author
+        if type(referenced_author) == discord.User:
+            # Convert to member
+            referenced_author = message.guild.get_member(
+                referenced_message.author.id
+            ) or await message.guild.fetch_member(referenced_message.author.id)
+
+        if referenced_author is None:
+            # Failed to convert to member
             return
 
-        if referenced_message.author.id not in [x.id for x in message.mentions]:
+        if referenced_author.id not in [x.id for x in message.mentions]:
             # message contained a mention, but it likely is not on the message reply
             return
 
-        ref_author_roles = [x.id for x in referenced_message.author.roles]  # type: ignore
+        ref_author_roles = [x.id for x in referenced_author.roles]  # type: ignore
         if dev_role not in ref_author_roles:
             # allow other people to reply to each other
             return
