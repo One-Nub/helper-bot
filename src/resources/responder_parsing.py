@@ -112,7 +112,7 @@ def _scan_message(*, message: str, trigger: str) -> bool:
 
 def _clean_trigger(trigger: str, *, regex_escape=False) -> str:
     """Removes asterisks and leading+trailing white space. Optionally escapes regex special characters.
-    Also removes common punctiation: ".", ",", "?", "!" """
+    Also removes common punctuation: ".", ",", "?", "!" """
     if trigger.startswith(SpecialChar.EXPLICIT):
         trigger = trigger[len(SpecialChar.EXPLICIT) :]
     else:
