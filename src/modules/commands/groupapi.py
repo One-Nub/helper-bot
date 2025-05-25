@@ -33,6 +33,12 @@ class GroupIDConverter(commands.Converter):
             split_two = split[1].split("/", maxsplit=1)
             int_output = split_two[0]
 
+        elif "/communities/" in argument:
+            # Roblox URL, grab the ID.
+            split = argument.split("/communities/")
+            split_two = split[1].split("/", maxsplit=1)
+            int_output = split_two[0]
+
         if int_output is None:
             raise commands.BadArgument()
         else:
