@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from resources.constants import ADMIN_ROLES, TRIAL_ROLE
 from resources.helper_bot import instance as bot
@@ -17,14 +17,14 @@ async def on_message(message):
                         message.author.id,
                         1,
                         "Trial" if TRIAL_ROLE in roles else "Staff",
-                        datetime.now(),
+                        updated_at=datetime.now(timezone.utc),
                     )
                 else:
                     await bot.db.update_staff_metric(
                         message.author.id,
                         data["msg_count"] + 1,
                         "Trial" if TRIAL_ROLE in roles else "Staff",
-                        datetime.now(),
+                        updated_at=datetime.now(timezone.utc),
                     )
             except Exception as e:
                 print(e)
