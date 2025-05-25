@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from discord import AllowedMentions, ButtonStyle, ChannelType, Embed, Interaction, ui
+from discord import AllowedMentions, ButtonStyle, ChannelType, Embed, Interaction, TextChannel, ui
 
 from resources.constants import BLURPLE
 from resources.helper_bot import instance as bot
@@ -22,6 +22,9 @@ async def support_button_handler(interaction: Interaction):
     channel = interaction.channel
     user = interaction.user
 
+    if type(channel) != TextChannel:
+        return await interaction.response.send_message(content="Error creating a thread!", ephemeral=True)
+
     thread = await channel.create_thread(name=f"{user.name}")
     await thread.add_user(user)
 
@@ -41,14 +44,20 @@ async def support_button_handler(interaction: Interaction):
 
     view = ui.View(timeout=None)
 
-    log_channels = await bot.db.get_log_channels(guild_id=interaction.guild.id)
+    if interaction.guild is None:
+        # Impossible unless discord freaks out
+        return
+
+    log_channels = await bot.db.get_log_channels(guild_id=str(interaction.guild.id))
+    if not log_channels:
+        log_channels = {}
     log_channel = log_channels.get("premium_support", "")
 
     custom_id = "lock_thread"
+
     if log_channel:
         custom_id += f":{log_channel}"
 
-    if log_channel:
         channel = bot.get_channel(log_channel)
         if not channel:
             channel = await bot.fetch_channel(log_channel)
@@ -65,8 +74,8 @@ async def support_button_handler(interaction: Interaction):
                 value=thread.mention,
                 inline=True,
             )
-            log_embed.timestamp = datetime.utcnow()
-            message = await channel.send(embed=log_embed)
+            log_embed.timestamp = datetime.now(timezone.utc)
+            message = await channel.send(embed=log_embed)  # type: ignore
 
             custom_id += f":{message.id}"
 
@@ -96,12 +105,15 @@ async def lock_button_handler(interaction: Interaction):
     channel = interaction.channel
     user = interaction.user
 
+    if channel is None:
+        return await interaction.response.send_message(content=f"Channel apparently does not exist.")
+
     await interaction.response.send_message(content=f"This support thread has been closed by {user.mention}!")
 
     if channel.type is ChannelType.private_thread:
         await channel.edit(archived=True, locked=True)
 
-    custom_id = interaction.data["custom_id"]
+    custom_id = interaction.data["custom_id"]  # type: ignore
     if ":" in custom_id:
         split = custom_id.split(":")
         channel_id = split[1]

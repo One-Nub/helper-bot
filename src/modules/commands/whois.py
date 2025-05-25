@@ -16,6 +16,9 @@ from resources.helper_bot import instance as bot
 @discord.app_commands.guild_only()
 @discord.app_commands.describe(user="The user you are trying to find info for.")
 async def whois(ctx: commands.Context, user: discord.User):
+    if not ctx.guild:
+        return await ctx.reply("This command only works in servers.")
+
     try:
         member = ctx.guild.get_member(user.id) or await ctx.guild.fetch_member(user.id)
     except (discord.HTTPException, discord.NotFound):
@@ -44,7 +47,7 @@ async def whois(ctx: commands.Context, user: discord.User):
     if member:
         embed.add_field(
             name="Joined",
-            value=f"<t:{int(member.joined_at.timestamp())}:R> (<t:{int(member.joined_at.timestamp())}>)",
+            value=f"<t:{int(member.joined_at.timestamp())}:R> (<t:{int(member.joined_at.timestamp())}>)",  # type: ignore
             inline=True,
         )
         embed.add_field(name="Roles", value=", ".join([role.mention for role in member.roles]))

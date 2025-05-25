@@ -55,8 +55,8 @@ async def on_command_error(ctx: Context, error: CommandError):
 
                 await ctx.send(
                     f"{custom_text} {match_command['content']}",
-                    reference=ctx.message.reference,
-                )
+                    reference=ctx.message.reference,  # type: ignore
+                )  # type: ignore
 
                 await bot.db.update_tag(
                     name,
@@ -72,7 +72,7 @@ async def on_command_error(ctx: Context, error: CommandError):
             param = error.param.name
             message = f"You're missing the required {param} argument!"
 
-            if ctx.command.name.startswith("tag"):
+            if ctx.command.name.startswith("tag"):  # type: ignore
                 param = "the tag content" if param == "tag_content" else "the tag name"
                 message = f"You're missing {param}!"
 
@@ -99,9 +99,9 @@ async def on_command_error(ctx: Context, error: CommandError):
     await ctx.reply(
         embed=error_embed,
         mention_author=False,
-        delete_after=5.0 if should_delete_original else None,
+        delete_after=5.0 if should_delete_original else None,  # type: ignore
         ephemeral=True,
-    )
+    )  # type: ignore
 
     if not ctx.interaction and should_delete_original:
         await asyncio.sleep(5)

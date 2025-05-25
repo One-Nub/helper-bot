@@ -79,8 +79,8 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
         msg = await ctx.send(
             tag["content"],
             allowed_mentions=allowed_mentions,
-            reference=ctx.message.reference,
-        )
+            reference=ctx.message.reference,  # type: ignore
+        )  # type: ignore
         await msg.edit(
             content=f"{message} {tag['content']}",
             allowed_mentions=allowed_mentions,
@@ -93,8 +93,8 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
         await ctx.send(
             tag["content"],
             allowed_mentions=allowed_mentions,
-            reference=ctx.message.reference,
-        )
+            reference=ctx.message.reference,  # type: ignore
+        )  # type: ignore
 
     await bot.db.update_tag(
         tag["_id"],
@@ -122,7 +122,7 @@ async def add_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â…
         tag_name,
         tag_content,
         aliases=None,
-        author=ctx.author.id,
+        author=str(ctx.author.id),
         use_count=0,
         created_at=datetime.now(),
         updated_at=datetime.now(),
@@ -152,7 +152,7 @@ async def edit_tag(ctx: Context, tag_name: str = "â…‹", *, tag_content: str = "â
     await bot.db.update_tag(
         tag_name,
         content=tag_content,
-        author=ctx.author.id,
+        author=str(ctx.author.id),
         updated_at=datetime.now(),
     )
 
@@ -246,7 +246,7 @@ async def view_tag(ctx: Context):
     view.add_item(right_button)
 
     # Get the embed & send.
-    embed = await build_page(ctx.author.display_avatar, tag_names, 0)
+    embed = await build_page(ctx.author.display_avatar.url, tag_names, 0)
     await ctx.reply(embed=embed, view=view)
 
 
@@ -366,11 +366,11 @@ async def alias_command_errors(ctx: Context, error: CommandError):
                 return
 
             await ctx.reply(
-                content=error,
+                content=str(error),
                 mention_author=False,
                 delete_after=5.0,
                 ephemeral=True,
-            )
+            )  # type: ignore
 
             if not ctx.interaction:
                 await asyncio.sleep(5)
@@ -382,7 +382,7 @@ async def alias_command_errors(ctx: Context, error: CommandError):
 
 @bot.register_button_handler("tag_all")
 async def view_tag_buttons(interaction: discord.Interaction):
-    custom_id = interaction.data["custom_id"]
+    custom_id = interaction.data["custom_id"]  # type: ignore
     custom_data = custom_id.split(":")
 
     # Remove tag_all text
@@ -396,6 +396,10 @@ async def view_tag_buttons(interaction: discord.Interaction):
     # Only listen to the author of the command
     if str(author_id) != str(interaction.user.id):
         await interaction.response.send_message("You can't flip pages on this embed!", ephemeral=True)
+        return
+
+    if interaction.message is None:
+        # discord giving us a ghost interaction apparently
         return
 
     # Get the timezone so python doesn't complain
