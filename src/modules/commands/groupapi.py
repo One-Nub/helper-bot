@@ -59,23 +59,22 @@ async def groupapi(ctx: commands.Context, group: GroupIDConverter):
 
     info_url = INFO_URL.format(group)
 
-    async with bot.aiohttp as session:
-        async with session.get(info_url) as info_req:
-            info_data = await info_req.json()
-        async with session.get(f"{info_url}/roles") as rank_req:
-            rank_data = await rank_req.json()
+    async with bot.aiohttp.get(info_url) as info_req:
+        info_data = await info_req.json()
+    async with bot.aiohttp.get(f"{info_url}/roles") as rank_req:
+        rank_data = await rank_req.json()
 
-        # Get group icon.
-        async with session.get(
-            "https://thumbnails.roblox.com/v1/groups/icons",
-            params={
-                "groupIds": [group],
-                "size": "420x420",
-                "format": "Png",
-                "isCircular": "false",
-            },  # type: ignore
-        ) as req:
-            thumbnail_data = await req.json()
+    # Get group icon.
+    async with bot.aiohttp.get(
+        "https://thumbnails.roblox.com/v1/groups/icons",
+        params={
+            "groupIds": [group],
+            "size": "420x420",
+            "format": "Png",
+            "isCircular": "false",
+        },  # type: ignore
+    ) as req:
+        thumbnail_data = await req.json()
 
     desc_builder = []
     name = "Invalid group."

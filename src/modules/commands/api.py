@@ -75,9 +75,8 @@ async def api_request_handler(user_id: int) -> tuple:
     embed.timestamp = datetime.now()
     embed.color = BLURPLE
 
-    async with bot.aiohttp as session:
-        async with session.get(url, headers={"Authorization": BLOXLINK_API_KEY}) as api_req:
-            response = await api_req.json()
+    async with bot.aiohttp.get(url, headers={"Authorization": BLOXLINK_API_KEY}) as api_req:
+        response = await api_req.json()
 
     # TODO: Bring back handling/catching?
 
