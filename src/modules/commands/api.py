@@ -69,27 +69,23 @@ async def api_menu(interaction: discord.Interaction, user: discord.Member):
 
 
 async def api_request_handler(user_id: int) -> tuple:
-    string = f"https://api.blox.link/v4/public/discord-to-roblox/{user_id}"
+    url = f"https://api.blox.link/v4/public/discord-to-roblox/{user_id}"
 
     embed = discord.Embed()
     embed.timestamp = datetime.now()
     embed.color = BLURPLE
 
-    try:
-        req = requests.get(string, headers={"Authorization": BLOXLINK_API_KEY}, timeout=5)
-        response = req.json()
-    except (requests.ConnectionError, requests.HTTPError, requests.Timeout) as exc:
-        embed.title = f"{BLOXLINK_DEAD} Error"
-        embed.description = f"An issue was encountered querying the Bloxlink api! - ({exc})"
-        embed.color = RED
+    async with bot.aiohttp as session:
+        async with session.get(url, headers={"Authorization": BLOXLINK_API_KEY}) as api_req:
+            response = await api_req.json()
 
-        return (embed, None)
+    # TODO: Bring back handling/catching?
 
     if response.get("resolved") is not None:
         del response["resolved"]
 
     embed.title = "Success"
-    embed.description = f"Sent a request to {string}.\n\n**Response**\n```json\n{response}```"
+    embed.description = f"Sent a request to {url}.\n\n**Response**\n```json\n{response}```"
 
     view = discord.ui.View()
     view.add_item(

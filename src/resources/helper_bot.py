@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal, Optional, Type
 
+import aiohttp
 import certifi
 import discord
 from discord.app_commands import CommandTree
@@ -58,6 +59,8 @@ class HelperBot(commands.Bot):
         self.started_at = datetime.now(timezone.utc)
         self.button_handlers = {}
         self.select_menu_handlers = {}
+
+        self.aiohttp = aiohttp.ClientSession()
 
         if mongodb_url:
             self.db = MongoDB(mongodb_url)

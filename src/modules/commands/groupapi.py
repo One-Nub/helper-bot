@@ -8,7 +8,7 @@ from discord.ext import commands
 from resources.constants import BLOXLINK_DETECTIVE, BLURPLE
 from resources.helper_bot import instance as bot
 
-INFO_URL = "/v1/groups/{0}"
+INFO_URL = "https://groups.roblox.com/v1/groups/{0}"
 
 
 class GroupIDConverter(commands.Converter):
@@ -53,32 +53,29 @@ class GroupIDConverter(commands.Converter):
 @discord.app_commands.describe(group="The group ID or group URL you are looking up.")
 async def groupapi(ctx: commands.Context, group: GroupIDConverter):
     # Query Roblox for group data.
-    session = aiohttp.ClientSession("https://groups.roblox.com")
     info_data: dict | None = None
     rank_data: dict | None = None
     thumbnail_data: dict | None = None
 
     info_url = INFO_URL.format(group)
 
-    async with session.get(info_url) as info_req:
-        info_data = await info_req.json()
-    async with session.get(f"{info_url}/roles") as rank_req:
-        rank_data = await rank_req.json()
-    await session.close()
+    async with bot.aiohttp as session:
+        async with session.get(info_url) as info_req:
+            info_data = await info_req.json()
+        async with session.get(f"{info_url}/roles") as rank_req:
+            rank_data = await rank_req.json()
 
-    # Get group icon.
-    session = aiohttp.ClientSession("https://thumbnails.roblox.com")
-    async with session.get(
-        "/v1/groups/icons",
-        params={
-            "groupIds": [group],
-            "size": "420x420",
-            "format": "Png",
-            "isCircular": "false",
-        },
-    ) as req:
-        thumbnail_data = await req.json()
-    await session.close()
+        # Get group icon.
+        async with session.get(
+            "https://thumbnails.roblox.com/v1/groups/icons",
+            params={
+                "groupIds": [group],
+                "size": "420x420",
+                "format": "Png",
+                "isCircular": "false",
+            },  # type: ignore
+        ) as req:
+            thumbnail_data = await req.json()
 
     desc_builder = []
     name = "Invalid group."
