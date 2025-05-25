@@ -31,3 +31,6 @@ async def send_premium_msg(interaction: Interaction, channel: TextChannel):
 
     await channel.send(embed=embed, view=view)
     await interaction.response.send_message("The message was successfully sent!", ephemeral=True)
+
+
+async def setup(bot): ...

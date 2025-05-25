@@ -82,3 +82,6 @@ async def activity_view(ctx: Context, staff_id):
     success_embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
 
     await ctx.reply(embed=success_embed, mention_author=False, ephemeral=True)
+
+
+async def setup(bot): ...

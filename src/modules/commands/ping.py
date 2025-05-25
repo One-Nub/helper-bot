@@ -9,3 +9,6 @@ async def ping(ctx: Context):
     ## get the bot latency and round it, multiply by 1000
     latency = round((ctx.bot.latency) * 1000)
     await ctx.reply("Pong! - " + str(latency) + "ms")
+
+
+async def setup(bot): ...

@@ -108,3 +108,6 @@ async def lock_button_handler(interaction: Interaction):
         message_id = split[2]
 
         await bot.http.delete_message(channel_id=channel_id, message_id=message_id)
+
+
+async def setup(bot): ...

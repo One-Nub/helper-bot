@@ -97,4 +97,5 @@ async def api_request_handler(user_id: int) -> tuple:
     return (embed, view)
 
 
-bot.tree.add_command(api_menu)
+async def setup(bot):
+    bot.tree.add_command(api_menu)

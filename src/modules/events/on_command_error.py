@@ -109,3 +109,6 @@ async def on_command_error(ctx: Context, error: CommandError):
 
     if not should_delete_original:
         raise error
+
+
+async def setup(bot): ...

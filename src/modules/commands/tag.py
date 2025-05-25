@@ -474,3 +474,6 @@ async def build_page(avatar_url: str, items: list[str], page_num: int = 0):
 
     # return the entire embed
     return embed_tags
+
+
+async def setup(bot): ...

@@ -63,4 +63,5 @@ async def translate_menu(interaction: discord.Interaction, message: discord.Mess
     )
 
 
-bot.tree.add_command(translate_menu)
+async def setup(bot):
+    bot.tree.add_command(translate_menu)

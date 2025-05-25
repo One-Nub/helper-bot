@@ -86,4 +86,5 @@ async def on_error(interaction: Interaction, error: app_commands.AppCommandError
     raise error
 
 
-bot.tree.add_command(logchannel)
+async def setup(bot):
+    bot.tree.add_command(logchannel)

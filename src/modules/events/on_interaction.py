@@ -48,3 +48,6 @@ async def on_interaction(interaction: Interaction):
 
         case InteractionType.modal_submit:
             pass
+
+
+async def setup(bot): ...

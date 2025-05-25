@@ -73,3 +73,6 @@ async def whois_error(ctx: commands.Context, error: commands.CommandError):
             )
 
     await ctx.reply(content=message[:2000], ephemeral=True, mention_author=False)
+
+
+async def setup(bot): ...

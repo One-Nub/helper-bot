@@ -42,3 +42,6 @@ async def stats(ctx: commands.Context):
     info_embed.add_field(name="Guilds", value=len(ctx.bot.guilds), inline=True)
 
     await ctx.reply(embed=info_embed, mention_author=False)
+
+
+async def setup(bot): ...

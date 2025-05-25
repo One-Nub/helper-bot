@@ -132,3 +132,6 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
                 "An unexpected error occurred. A log has been left for the devs 🫡"
             )
             return await super().on_error(interaction, error)
+
+
+async def setup(bot): ...
