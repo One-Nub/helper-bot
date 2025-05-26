@@ -63,7 +63,8 @@ class DevAutoresponder(commands.GroupCog, name="dev_autoresponder"):
             content=(
                 "Please do not ping the developer when replying to him. "
                 "Send your message again, but do not ping him in your reply, thanks!\n"
-                "-# This is an automated message and will self destruct in 10 seconds."
+                "-# This is an automated message and will self destruct in 10 seconds. "
+                "https://media.discordapp.net/attachments/1372079441064493107/1376666627768193135/image.png"
             )
         )
 
