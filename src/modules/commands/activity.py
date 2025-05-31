@@ -109,7 +109,7 @@ class Activity(commands.Cog):
             message.author.bot
             or not message.guild
             or not type(message.author) == discord.Member
-            # or message.channel.id != SUPPORT_CHANNEL
+            or message.channel.id != SUPPORT_CHANNEL
             or message.content.startswith(str(bot.command_prefix))
         ):
             return
