@@ -13,6 +13,21 @@ from resources.helper_bot import instance as bot
 
 
 class DateConverter(commands.Converter):
+    """Converts a given string to a set YYYY-MM format.
+
+    "/" is replaced with "-" in the given input
+    Accepted formats:
+        MM
+        YYYY-MM
+        YYYY MM
+        MM-YYYY
+        MM YYYY
+        Jan YYYY
+        January YYYY
+        Jan
+        January
+    """
+
     async def convert(self, ctx: Context, argument: str) -> str | None:
         now = datetime.now(timezone.utc)
         if argument.isdigit():
