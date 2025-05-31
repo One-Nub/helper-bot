@@ -49,7 +49,7 @@ class VolunteerMetric:
     id: str = attrs.field(converter=str)
     messages: int
     tags: int
-    is_staff: typing.Optional[bool] = attrs.field(
+    is_volunteer: typing.Optional[bool] = attrs.field(
         kw_only=True, converter=attrs.converters.default_if_none(True), default=True
     )
     is_trial: typing.Optional[bool] = attrs.field(
@@ -59,20 +59,11 @@ class VolunteerMetric:
     @classmethod
     def from_db(cls, data: dict):
         is_staff = data["staff_pos"] == "Staff"
-        if data.get("updated_at") is None:
-            return cls(
-                id=data["_id"],
-                messages=data["msg_count"],
-                tags=0,
-                is_staff=is_staff,
-                is_trial=not is_staff,
-            )
-
         return cls(
             id=data["_id"],
             messages=data["msg_count"],
             tags=data["tag_count"],
-            is_staff=is_staff,
+            is_volunteer=is_staff,
             is_trial=not is_staff,
         )
 
