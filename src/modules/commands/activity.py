@@ -2,6 +2,7 @@ import typing
 from datetime import datetime, timezone
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context, check
 
@@ -107,10 +108,11 @@ class Activity(commands.Cog):
             message.author.bot
             or not message.guild
             or not type(message.author) == discord.Member
-            or message.channel.id != SUPPORT_CHANNEL
+            # or message.channel.id != SUPPORT_CHANNEL
         ):
             return
 
+        await bot.db.update_staff_metric(str(message.author.id), "volunteer", incr_message=True)
         author_roles = set([role.id for role in message.author.roles])
         staff_roles = set(ADMIN_ROLES.values())
 
@@ -122,10 +124,11 @@ class Activity(commands.Cog):
             ...
 
     @commands.hybrid_group(name="activity")
+    @check(is_hr)
     async def activity_group(
         self,
         ctx: Context,
-        team: typing.Optional[typing.Literal["staff", "trial"]] = "staff",
+        team: typing.Optional[typing.Literal["volunteer", "trial"]] = "volunteer",
         *,
         date: typing.Optional[DateConverter] = None,
     ):
@@ -134,16 +137,27 @@ class Activity(commands.Cog):
 
     @activity_group.command(  # type: ignore
         name="leaderboard",
-        description="Learn how to use the command!",
+        description="Send the activity leaderboard to this channel!",
         aliases=["lb"],
     )
+    @app_commands.describe(team="Volunteers or Trials", date="Month & year (or just month)")
+    @check(is_hr)
     async def leaderboard(
         self,
         ctx: Context,
-        team: typing.Optional[typing.Literal["staff", "trial"]] = "staff",
+        team: typing.Optional[typing.Literal["volunteer", "trial"]] = "volunteer",
         *,
         date: typing.Optional[DateConverter] = None,
     ):
+        if team == "volunteer":
+            allowed = await is_cm(ctx)
+            if not allowed:
+                return await ctx.reply(
+                    "You don't have permissions to check this leaderboard.",
+                    ephemeral=True,
+                    delete_after=7,
+                )
+
         await ctx.reply(f"user input gotten - {team}; {date}")
 
 
