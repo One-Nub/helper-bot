@@ -173,15 +173,15 @@ class Activity(commands.Cog):
             )
 
         metric_list = month_metrics.staff if team == "volunteer" else month_metrics.trial_staff
-        metric_list.sort(key=(lambda x: x.messages))
+        metric_list.sort(key=(lambda x: x.messages + x.tags), reverse=True)
 
         desc_output = []
         for user in metric_list:
             duser = bot.get_user(int(user.id)) or await bot.fetch_user(int(user.id))
             desc_output.append(
-                f"<@{user.id}> ({duser.name}) - "
-                f"{user.messages} message{'s' if user.messages > 1 else ''}; "
-                f"{user.tags} tag{'s' if user.tags > 1 else ''}"
+                f"<@{user.id}> ({duser.name}): "
+                f"`{user.messages}` message{'s' if user.messages != 1 else ''}; "
+                f"`{user.tags}` tag{'s' if user.tags != 1 else ''} ran"
             )
 
         date_obj = datetime.strptime(date, "%Y-%m")
