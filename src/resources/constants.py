@@ -62,3 +62,11 @@ DEVELOPMENT_GUILDS = {
     440350951572897812,  # nub testing guild 1 - "Cookie Tasting"
     355170963895091210,  # nub testing guild 2 - "testing bot server :O"
 }
+
+SUPPORT_CHANNEL = 372181186816245770
+TAG_METRIC_IGNORE_CHANNELS = {
+    695375776043761744,  # volunteer commands
+    412792638513741825,  # volunteer main
+    818980943179546644,  # trial helpers
+    372181138002935819,  # public bot-commands
+}

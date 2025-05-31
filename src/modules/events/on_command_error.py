@@ -12,7 +12,14 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 
-from resources.constants import BLOXLINK_DEAD, RED
+from resources.constants import (
+    ADMIN_ROLES,
+    BLOXLINK_DEAD,
+    BLOXLINK_GUILD,
+    RED,
+    TAG_METRIC_IGNORE_CHANNELS,
+    TRIAL_ROLE,
+)
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
@@ -48,6 +55,10 @@ async def on_command_error(ctx: Context, error: CommandError):
                 return
 
             custom_text = ctx.message.content.split(name, maxsplit=1)[1]
+
+            if not ctx.guild:
+                return
+
             match_command = await bot.db.get_tag(name)
 
             if match_command:
@@ -62,6 +73,18 @@ async def on_command_error(ctx: Context, error: CommandError):
                     name,
                     use_count=match_command["use_count"] + 1,
                 )
+
+                # Update staff metrics - only when used in a valid channel in bloxlink guild.
+                # TODO: Move this to its own method somewhere to be called instead of this copy pasted code.
+                if ctx.guild.id != BLOXLINK_GUILD or ctx.message.channel.id in TAG_METRIC_IGNORE_CHANNELS:
+                    return
+
+                author_roles = set([role.id for role in ctx.author.roles])  # type: ignore
+                staff_roles = set(ADMIN_ROLES.values())
+                if TRIAL_ROLE in author_roles:
+                    await bot.db.update_staff_metric(str(ctx.author.id), "trial", incr_tags=True)
+                elif author_roles.intersection(staff_roles):
+                    await bot.db.update_staff_metric(str(ctx.author.id), "volunteer", incr_tags=True)
 
             return
 

@@ -15,7 +15,16 @@ from discord.ext.commands import (
 from textdistance import Sorensen
 
 from resources.checks import is_staff, is_staff_or_trial
-from resources.constants import BLOXLINK_HAPPY, BLURPLE, UNICODE_LEFT, UNICODE_RIGHT
+from resources.constants import (
+    ADMIN_ROLES,
+    BLOXLINK_GUILD,
+    BLOXLINK_HAPPY,
+    BLURPLE,
+    TAG_METRIC_IGNORE_CHANNELS,
+    TRIAL_ROLE,
+    UNICODE_LEFT,
+    UNICODE_RIGHT,
+)
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
 
@@ -62,6 +71,9 @@ async def tag_alias_autocomplete(interaction: discord.Interaction, user_input: s
 @app_commands.guild_only()
 @app_commands.autocomplete(name=tag_name_autocomplete)
 async def tag_base(ctx: Context, name: str, *, message: str = "0"):
+    if not ctx.guild:
+        return
+
     ## if name is empty, raise error
     if name == "0":
         raise HelperError("You forgot the tag name!")
@@ -100,6 +112,18 @@ async def tag_base(ctx: Context, name: str, *, message: str = "0"):
         tag["_id"],
         use_count=tag["use_count"] + 1,
     )
+
+    # Update staff metrics - only when used in a valid channel in bloxlink guild.
+    # TODO: Move this to its own method somewhere to be called instead of this copy pasted code.
+    if ctx.guild.id != BLOXLINK_GUILD or ctx.message.channel.id in TAG_METRIC_IGNORE_CHANNELS:
+        return
+
+    author_roles = set([role.id for role in ctx.author.roles])  # type: ignore
+    staff_roles = set(ADMIN_ROLES.values())
+    if TRIAL_ROLE in author_roles:
+        await bot.db.update_staff_metric(str(ctx.author.id), "trial", incr_tags=True)
+    elif author_roles.intersection(staff_roles):
+        await bot.db.update_staff_metric(str(ctx.author.id), "volunteer", incr_tags=True)
 
 
 @tag_base.command("add", description="Add a tag to the tag list.", aliases=["create"])
