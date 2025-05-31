@@ -11,6 +11,7 @@ from resources.constants import ADMIN_ROLES, BLURPLE, SUPPORT_CHANNEL, TRIAL_ROL
 from resources.exceptions import HelperError
 from resources.helper_bot import HelperBot
 from resources.helper_bot import instance as bot
+from resources.utils.base_embeds import StandardEmbed
 
 
 class DateConverter(commands.Converter):
@@ -149,13 +150,47 @@ class Activity(commands.Cog):
         if team == "volunteer":
             allowed = await is_cm(ctx)
             if not allowed:
+                if ctx.message:
+                    await ctx.message.delete(delay=7.0)
                 return await ctx.reply(
                     "You don't have permissions to check this leaderboard.",
                     ephemeral=True,
                     delete_after=7,
                 )
 
-        await ctx.reply(f"user input gotten - {team}; {date}")
+        if not date:
+            now = datetime.now(timezone.utc)
+            date = now.strftime("%Y-%m")  # type: ignore
+
+        month_metrics = await bot.db.get_month_metrics(date)
+        if not month_metrics:
+            if ctx.message:
+                await ctx.message.delete(delay=7.0)
+            return await ctx.reply(
+                f"No data found for the month of `{date}`.",
+                ephemeral=True,
+                delete_after=7,
+            )
+
+        metric_list = month_metrics.staff if team == "volunteer" else month_metrics.trial_staff
+        metric_list.sort(key=(lambda x: x.messages))
+
+        desc_output = []
+        for user in metric_list:
+            duser = bot.get_user(int(user.id)) or await bot.fetch_user(int(user.id))
+            desc_output.append(
+                f"<@{user.id}> ({duser.name}) - "
+                f"{user.messages} message{'s' if user.messages > 1 else ''}; "
+                f"{user.tags} tag{'s' if user.tags > 1 else ''}"
+            )
+
+        date_obj = datetime.strptime(date, "%Y-%m")
+        embed = StandardEmbed(
+            title=f"Volunteer Metrics for {date_obj.strftime('%B %Y')}",
+            description="\n".join(desc_output),
+            footer_icon_url=ctx.author.display_avatar.url,
+        )
+        await ctx.reply(embed=embed, mention_author=False, ephemeral=True)
 
 
 # @bot.hybrid_group("activity", description="Send (staff) activity leaderboard to this channel!", fallback="lb")
