@@ -56,17 +56,6 @@ class VolunteerMetric:
         kw_only=True, converter=attrs.converters.default_if_none(False), default=False
     )
 
-    @classmethod
-    def from_db(cls, data: dict):
-        is_staff = data["staff_pos"] == "Staff"
-        return cls(
-            id=data["_id"],
-            messages=data["msg_count"],
-            tags=data["tag_count"],
-            is_volunteer=is_staff,
-            is_trial=not is_staff,
-        )
-
 
 @attrs.define
 class MonthlyVolunteerMetrics:
@@ -77,7 +66,36 @@ class MonthlyVolunteerMetrics:
 
     @classmethod
     def from_db(cls, data: dict):
-        pass
+        volunteers = []
+        trials = []
+        if vols := data.get("volunteer", {}):
+            for uid, udata in vols.items():
+                volunteers.append(
+                    VolunteerMetric(
+                        uid,
+                        udata.get("msg_count", 0),
+                        udata.get("tag_count", 0),
+                        is_volunteer=True,
+                    )
+                )
+
+        if trls := data.get("trial", {}):
+            for uid, udata in trls.items():
+                trials.append(
+                    VolunteerMetric(
+                        uid,
+                        udata.get("msg_count", 0),
+                        udata.get("tag_count", 0),
+                        is_volunteer=False,
+                        is_trial=True,
+                    )
+                )
+
+        return cls(
+            id=data["_id"],
+            staff=volunteers,
+            trial_staff=trials,
+        )
 
 
 @attrs.define
