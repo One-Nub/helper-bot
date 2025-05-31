@@ -112,16 +112,13 @@ class Activity(commands.Cog):
         ):
             return
 
-        await bot.db.update_staff_metric(str(message.author.id), "volunteer", incr_message=True)
         author_roles = set([role.id for role in message.author.roles])
         staff_roles = set(ADMIN_ROLES.values())
 
         if TRIAL_ROLE in author_roles:
-            # update metric for trial member
-            ...
+            await bot.db.update_staff_metric(str(message.author.id), "trial", incr_message=True)
         elif author_roles.intersection(staff_roles):
-            # update metric for staff member
-            ...
+            await bot.db.update_staff_metric(str(message.author.id), "volunteer", incr_message=True)
 
     @commands.hybrid_group(name="activity")
     @check(is_hr)
@@ -130,10 +127,10 @@ class Activity(commands.Cog):
         ctx: Context,
         team: typing.Optional[typing.Literal["volunteer", "trial"]] = "volunteer",
         *,
-        date: typing.Optional[DateConverter] = None,
+        date: typing.Optional[typing.Annotated[str, DateConverter]] = None,
     ):
         # Not using fallback because fallback had some weird behavior with the arguments.
-        return await self.leaderboard(ctx, team, date)
+        return await self.leaderboard(ctx, team, date=date)
 
     @activity_group.command(  # type: ignore
         name="leaderboard",
@@ -147,7 +144,7 @@ class Activity(commands.Cog):
         ctx: Context,
         team: typing.Optional[typing.Literal["volunteer", "trial"]] = "volunteer",
         *,
-        date: typing.Optional[DateConverter] = None,
+        date: typing.Optional[typing.Annotated[str, DateConverter]] = None,
     ):
         if team == "volunteer":
             allowed = await is_cm(ctx)
