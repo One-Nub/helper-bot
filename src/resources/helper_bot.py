@@ -11,6 +11,7 @@ from discord.ext import commands
 from motor import motor_asyncio
 
 from resources.constants import DEVELOPMENT_GUILDS, TEAM_CENTER_GUILD
+from resources.models.database import MonthlyVolunteerMetrics
 
 instance: "HelperBot" = None  # type: ignore
 logger = logging.getLogger()
@@ -276,64 +277,32 @@ class MongoDB:
     ####
     async def update_staff_metric(
         self,
-        staff_id: int,
-        msg_count: int,
-        staff_pos: str,
-        tag_count: Optional[int] = 0,
-        updated_at: Optional[datetime] = None,
+        staff_id: str,
+        staff_pos: Literal["volunteer", "trial"],
+        incr_message: bool = False,
+        incr_tags: bool = False,
     ):
-        """Create a staff metric in the database
+        """Create a staff metric in the database"""
+        now = datetime.now(timezone.utc)
+        now_id = now.strftime("%Y-%m")
 
-        Args:
-           staff_id (int): The staff members user ID.
-           msg_count (int): Number of messages the staff member has sent.
-           staff_pos (str): The Staff members position.
-           tag_count (int, optional): Number of tags the staff member has used.
-           updated_at (datetime, optional): Date of last message. Defaults to None.
-        """
-        data = {
-            "msg_count": msg_count,
-            "staff_pos": staff_pos,
-        }
+        if not incr_message and not incr_tags:
+            raise ValueError("Cannot have incr_message and incr_tags both be false.")
 
-        if updated_at is not None:
-            data["updated_at"] = updated_at.isoformat()
-        if tag_count is not None:
-            data["tag_count"] = tag_count
-        filter_query = {
-            "$or": [
-                {"_id": staff_id},
-            ],
-        }
+        staff_id = str(staff_id)
 
         await self.db["metrics"].update_one(
-            filter=filter_query,
-            update={"$set": data, "$setOnInsert": {"_id": staff_id}},
+            filter={"_id": now_id},
+            update={"$inc": {f"{staff_pos}.{staff_id}.{'msg_count' if incr_message else 'tag_count'}": 1}},
             upsert=True,
         )
 
-    async def get_staff_metrics(self, staff_id):
-        """Get specific metrics for a staff user."""
-        cursor = await self.db["metrics"].find_one({"_id": staff_id})
-        return cursor
-
-    async def get_all_staff_metrics(self) -> list:
-        """Return a list of all the Staff metrics in the database.
-
-        Returns:
-            list: List of the Staff activity, each tag is a dictionary.
-        """
-        cursor = self.db["metrics"].find({"staff_pos": "Staff"})
-        return await cursor.to_list(None)
-
-    async def get_all_trial_metrics(self) -> list:
-        """Return a list of all the Trial metrics in the database.
-
-        Returns:
-            list: List of the Trial activity, each tag is a dictionary.
-        """
-        cursor = self.db["metrics"].find({"staff_pos": "Trial"})
-        return await cursor.to_list(None)
+    async def get_month_metrics(self, date: str) -> MonthlyVolunteerMetrics | None:
+        """Return the metrics in the database for a given month. Includes trial and volunteer data."""
+        cursor = await self.db["metrics"].find_one({"_id": date})
+        if cursor:
+            return MonthlyVolunteerMetrics.from_db(cursor)
+        return None
 
     ####
     ####################---------LOG CHANNEL METHODS-----------########################
