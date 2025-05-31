@@ -61,8 +61,8 @@ class VolunteerMetric:
 class MonthlyVolunteerMetrics:
     id: str = attrs.field(converter=str)  # yyyy
     # These next two are dicts in the DB, but in our POV we just want a list of people.
-    staff: typing.Optional[list[VolunteerMetric]] = attrs.field(factory=list[VolunteerMetric])
-    trial_staff: typing.Optional[list[VolunteerMetric]] = attrs.field(factory=list[VolunteerMetric])
+    staff: list[VolunteerMetric] = attrs.field(factory=list[VolunteerMetric])
+    trial_staff: list[VolunteerMetric] = attrs.field(factory=list[VolunteerMetric])
 
     @classmethod
     def from_db(cls, data: dict):
