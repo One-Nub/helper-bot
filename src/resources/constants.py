@@ -62,3 +62,5 @@ DEVELOPMENT_GUILDS = {
     440350951572897812,  # nub testing guild 1 - "Cookie Tasting"
     355170963895091210,  # nub testing guild 2 - "testing bot server :O"
 }
+
+SUPPORT_CHANNEL = 372181186816245770
