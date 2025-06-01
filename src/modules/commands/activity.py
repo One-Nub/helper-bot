@@ -180,6 +180,8 @@ class Activity(commands.Cog):
         if not metric_list:
             desc_output.append(f"No metrics were found for the `{team}` team this month.")
         else:
+            await ctx.defer(ephemeral=True)
+
             for user in metric_list:
                 duser = bot.get_user(int(user.id)) or await bot.fetch_user(int(user.id))
                 desc_output.append(
