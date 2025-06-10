@@ -12,6 +12,7 @@ from textdistance import Sorensen
 import resources.responder_parsing as resp_parsing
 from resources.checks import is_staff
 from resources.constants import (
+    ACTIVE_EMOTE,
     ADMIN_ROLES,
     BLOXLINK_DAB,
     BLOXLINK_DEAD,
@@ -19,6 +20,7 @@ from resources.constants import (
     BLOXLINK_HAPPY,
     BLOXLINK_MASK,
     GREEN,
+    INACTIVE_EMOTE,
     RED,
     UNICODE_LEFT,
     UNICODE_RIGHT,
@@ -279,7 +281,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             message_triggers = [f"`{discord.utils.escape_markdown(tr)}`" for tr in ar.message_triggers]
             message_tr_str = ", ".join(message_triggers)
 
-            trigger_strings.append(f"- {ar.name} {UNICODE_RIGHT_ALT} \n\t{message_tr_str}")
+            trigger_strings.append(
+                f"- **{ACTIVE_EMOTE if ar.enabled else INACTIVE_EMOTE}**{ar.name} {UNICODE_RIGHT_ALT} \n\t{message_tr_str}"
+            )
         embed.description = f"> ***<Responder Name> {UNICODE_RIGHT_ALT} <Trigger Strings>***\n" + "\n".join(
             trigger_strings
         )
