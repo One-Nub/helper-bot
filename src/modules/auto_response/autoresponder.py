@@ -139,7 +139,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             auto_responses = await self.bot.db.get_all_autoresponses()
             valid_names = [AutoResponse.from_database(ar).name for ar in auto_responses]
         else:
-            valid_names = set(ar.name for ar in stored_trigger_map.values())
+            valid_names = [ar.name for ar in stored_trigger_map.values()]
+
+        valid_names.sort()
 
         if user_input == "":
             return [app_commands.Choice(name=name, value=name) for name in valid_names][:25]
@@ -161,7 +163,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             return []
 
         valid_triggers = AutoResponse.from_database(auto_response).message_triggers
-
+        valid_triggers.sort()
         if user_input == "":
             return [app_commands.Choice(name=name, value=name) for name in valid_triggers][:25]
 
