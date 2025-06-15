@@ -43,6 +43,10 @@ class MessageEditModal(discord.ui.Modal, title="Update Message"):
             response_message=self.response_msg.value,
             author=author_id,
         )
+
+        logging.info(
+            f"Clearing stored trigger map - responder {responder_name} message updated. - {id(stored_trigger_map)}"
+        )
         stored_trigger_map.clear()
 
         ar = AutoResponse(name=responder_name, response_message=self.response_msg.value, author=author_id)
@@ -97,6 +101,10 @@ class NewResponderModal(discord.ui.Modal, title="New Auto Response"):
             message_triggers=[normalized_trigger_string],
             author=author_id,
             auto_deletion=auto_delete,
+        )
+
+        logging.info(
+            f"Clearing stored trigger map - responder {responder_name} newly created. - {id(stored_trigger_map)}"
         )
         stored_trigger_map.clear()
 

@@ -73,13 +73,14 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             logging.info("Updating the stored trigger map...")
             auto_responses = await self.bot.db.get_all_autoresponses()
             auto_responses = [AutoResponse.from_database(x) for x in auto_responses]
+            print(auto_responses)
 
             for ar in auto_responses:
                 for tr in ar.message_triggers:
                     stored_trigger_map[tr] = ar
 
             logging.info(
-                f"Stored trigger map updated. There are now {len(stored_trigger_map)} values in the map."
+                f"Stored trigger map updated. There are now {len(stored_trigger_map)} values in the map. - {id(stored_trigger_map)}"
             )
 
         guild_id = str(message.guild.id)
@@ -415,7 +416,10 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed.color = RED
 
         await self.bot.db.delete_autoresponse(name=name)
+
+        logging.info(f"Clearing stored trigger map - responder {name} deleted. - {id(stored_trigger_map)}")
         stored_trigger_map.clear()
+
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was removed.", embed=embed
         )
@@ -440,7 +444,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
         embed.set_footer(text="Bloxlink Helper", icon_url=ctx.user.display_avatar)
         embed.color = GREEN if ar.enabled else RED
 
+        logging.info(f"Clearing stored trigger map - responder {name} toggled. - {id(stored_trigger_map)}")
         stored_trigger_map.clear()
+
         await ctx.response.send_message(
             f"Success! The responder associated with the name `{name}` was {'enabled' if ar.enabled else 'disabled'}.",
             embed=embed,
@@ -516,6 +522,10 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
         ar.message_triggers.append(trigger)
         await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
+
+        logging.info(
+            f"Clearing stored trigger map - responder {name} trigger added. - {id(stored_trigger_map)}"
+        )
         stored_trigger_map.clear()
 
         embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
@@ -554,6 +564,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
 
             ar.message_triggers.remove(trigger)
             await self.bot.db.update_autoresponse(name=name, message_triggers=ar.message_triggers)
+            logging.info(
+                f"Clearing stored trigger map - responder {name} trigger deleted. - {id(stored_trigger_map)}"
+            )
             stored_trigger_map.clear()
 
             embed = StandardEmbed(footer_icon_url=str(ctx.user.display_avatar))
@@ -676,6 +689,9 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             )
 
         await self.bot.db.update_autoresponse(name, author=str(ctx.user.id), auto_deletion=duration)
+        logging.info(
+            f"Clearing stored trigger map - responder {name} timeout edited. - {id(stored_trigger_map)}"
+        )
         stored_trigger_map.clear()
 
         response = (
