@@ -140,7 +140,7 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             auto_responses = await self.bot.db.get_all_autoresponses()
             valid_names = [AutoResponse.from_database(ar).name for ar in auto_responses]
         else:
-            valid_names = [ar.name for ar in stored_trigger_map.values()]
+            valid_names = list(set(ar.name for ar in stored_trigger_map.values()))
 
         valid_names.sort()
 
