@@ -85,7 +85,7 @@ async def support_button_handler(interaction: Interaction):
     await thread.send(
         embed=embed,
         view=view,
-        content=f"{user.mention} has opened a thread!",
+        content=f"{user.mention} has opened a thread!\n-# <@&818919735193632858> <@&412791520316358656>",
         allowed_mentions=AllowedMentions(users=False),
     )
 
