@@ -283,7 +283,9 @@ async def tag_search(ctx: Context, query: str = "0"):
         raise HelperError("You forgot the search query!")
 
     tag_list = await bot.db.get_all_tags()
-    matching_tags = [tag["_id"] for tag in tag_list if query.lower().strip() in tag["content"]]
+    matching_tags = [
+        tag["_id"] for tag in tag_list if query.lower().strip() in tag["content"].lower().strip()
+    ]
 
     output = (
         "*Found tag names with this content:*\n" + "\n".join(matching_tags)
