@@ -73,7 +73,6 @@ class Autoresponder(commands.GroupCog, name="autoresponder"):
             logging.info("Updating the stored trigger map...")
             auto_responses = await self.bot.db.get_all_autoresponses()
             auto_responses = [AutoResponse.from_database(x) for x in auto_responses]
-            print(auto_responses)
 
             for ar in auto_responses:
                 for tr in ar.message_triggers:
