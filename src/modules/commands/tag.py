@@ -17,6 +17,7 @@ from textdistance import Sorensen
 from resources.checks import is_staff, is_staff_or_trial
 from resources.constants import (
     ADMIN_ROLES,
+    BLOXLINK_DETECTIVE,
     BLOXLINK_GUILD,
     BLOXLINK_HAPPY,
     BLURPLE,
@@ -272,6 +273,33 @@ async def view_tag(ctx: Context):
     # Get the embed & send.
     embed = await build_page(ctx.author.display_avatar.url, tag_names, 0)
     await ctx.reply(embed=embed, view=view)
+
+
+@tag_base.command("search", description="Look up some tags based on a given query string.")
+@check(is_staff_or_trial)
+async def tag_search(ctx: Context, query: str = "0"):
+    ## if name is empty, raise error
+    if query == "0":
+        raise HelperError("You forgot the search query!")
+
+    tag_list = await bot.db.get_all_tags()
+    matching_tags = [tag["_id"] for tag in tag_list if query.lower().strip() in tag["content"]]
+
+    output = (
+        "*Found tag names with this content:*\n" + "\n".join(matching_tags)
+        if matching_tags
+        else "No matching tag content was found."
+    )
+
+    embed = discord.Embed(
+        title=f"{BLOXLINK_DETECTIVE} Matching Tags",
+        description=output,
+        color=BLURPLE,
+    )
+
+    embed.set_footer(text="Bloxlink Helper", icon_url=ctx.author.display_avatar)
+    embed.timestamp = datetime.now()
+    await ctx.reply(embed=embed, mention_author=False)
 
 
 # ------------ TAG ALIAS ------------
