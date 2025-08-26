@@ -86,7 +86,7 @@ async def support_button_handler(interaction: Interaction):
         embed=embed,
         view=view,
         content=f"{user.mention} has opened a thread!\n-# <@&818919735193632858> <@&412791520316358656>",
-        allowed_mentions=AllowedMentions(users=False),
+        allowed_mentions=AllowedMentions(users=False, roles=True),
     )
 
     await interaction.response.send_message(content="Your support thread has been opened!", ephemeral=True)
