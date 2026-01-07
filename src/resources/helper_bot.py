@@ -312,6 +312,7 @@ class MongoDB:
         guild_id: str,
         premium_support: Optional[str] = None,
         tag_updates: Optional[str] = None,
+        moderation: Optional[str] = None,
     ):
         """Set the log channel(s) in a guild
 
@@ -319,12 +320,15 @@ class MongoDB:
             guild_id (str): The guild to set the log channels in.
             premium_support (str, optional): Channel to send logs of open support tickets to. Defaults to None.
             tag_updates (str, optional): Channel to send logs of tags being updated to. Defaults to None.
+            moderation (str, optional): Channel to send logs of mod actions. Defaults to None.
         """
         data = {}
         if premium_support is not None:
             data["premium_support"] = premium_support
         if tag_updates is not None:
             data["tag_updates"] = tag_updates
+        if moderation is not None:
+            data["moderation"] = moderation
 
         if not data:
             return
@@ -340,7 +344,9 @@ class MongoDB:
         cursor = await self.db["config"].find_one({"_id": str(guild_id)})
         return cursor
 
-    async def unset_log_channel(self, guild_id: str, log_type: Literal["premium_support", "tag_updates"]):
+    async def unset_log_channel(
+        self, guild_id: str, log_type: Literal["premium_support", "tag_updates", "moderation"]
+    ):
         """Unset a log channel
 
         Args:

@@ -23,6 +23,7 @@ logchannel = app_commands.Group(
     log_type=[
         Choice(name="Premium Support logs", value=0),
         Choice(name="General logs", value=1),
+        Choice(name="Mod logs", value=2),
     ]
 )
 @app_commands.check(is_staff)
@@ -37,18 +38,23 @@ async def set_log_channels(
     channel_id = str(channel.id) if channel else None
 
     if channel_id is not None:
-        if log_type == 0:
-            await bot.db.set_log_channel(
-                str(interaction.guild_id), premium_support=channel_id if channel is not None else ""
-            )
-        elif log_type == 1:
-            await bot.db.set_log_channel(str(interaction.guild_id), tag_updates=channel_id)
+        match log_type:
+            case 0:
+                await bot.db.set_log_channel(
+                    str(interaction.guild_id), premium_support=channel_id if channel is not None else ""
+                )
+            case 1:
+                await bot.db.set_log_channel(str(interaction.guild_id), tag_updates=channel_id)
+            case 2:
+                await bot.db.set_log_channel(str(interaction.guild_id), moderation=channel_id)
 
     else:
-        log_type_str = "premium_support" if log_type == 0 else "tag_updates"
+        log_type_str = (
+            "premium_support" if log_type == 0 else "tag_updates" if log_type == 1 else "moderation"
+        )
         await bot.db.unset_log_channel(str(interaction.guild_id), log_type_str)
 
-    content = "premium support threads" if log_type == 0 else "tag updates"
+    content = "premium support threads" if log_type == 0 else "tag updates" if log_type == 1 else "moderation"
     channel_str = f"set to <#{channel_id}>" if channel else "unset"
 
     await interaction.response.send_message(
@@ -65,13 +71,18 @@ async def view_log_channels(interaction: Interaction):
 
     premium = data.get("premium_support")
     general = data.get("tag_updates")
+    mod = data.get("moderation")
 
     premium = f"<#{premium}>" if premium else "`Unset`"
     general = f"<#{general}>" if general else "`Unset`"
+    mod = f"<#{mod}>" if mod else "`Unset`"
 
     embed = Embed()
     embed.description = (
-        "### Your set log channels!\n\n" f"- Premium Logs: {premium}\n" f"- Tag Updates/Misc: {general}"
+        "### Your set log channels!\n\n"
+        f"- Premium Logs: {premium}\n"
+        f"- Tag Updates/Misc: {general}\n"
+        f"- Moderation Logs: {mod}"
     )
 
     await interaction.response.send_message(embed=embed, ephemeral=True)

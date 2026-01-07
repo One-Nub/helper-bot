@@ -27,11 +27,13 @@ class AutoResponse:
         )
 
 
+# TODO: broken & unused
 @attrs.define
 class ServerConfig:
     id: str = attrs.field(converter=str)
     premium_support_log_channel: typing.Optional[int] = attrs.field(kw_only=True)
     general_admin_log_channel: typing.Optional[int] = attrs.field(kw_only=True)
+    mod_log_channel: typing.Optional[int] = attrs.field(kw_only=True)
     responder_channels: typing.Optional[list[str]] = attrs.field(kw_only=True)
 
     @classmethod
@@ -40,6 +42,7 @@ class ServerConfig:
             id=data["_id"],
             premium_support_log_channel=data.get("author"),
             general_admin_log_channel=data.get("auto_deletion"),
+            mod_log_channel=data.get("moderation"),
             responder_channels=data.get("response_message"),
         )
 
