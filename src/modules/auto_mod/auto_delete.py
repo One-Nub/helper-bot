@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import logging
 import re
 
 import discord
@@ -10,6 +11,7 @@ from resources.constants import ADMIN_ROLES, RED
 from resources.helper_bot import HelperBot
 
 NAME_REGEX = re.compile(r"\d\.(jpg|jpeg|png|webm|gif|mov|mp4|gifv)")
+_logger = logging.getLogger(__name__)
 
 
 @app_commands.guild_only()
@@ -35,6 +37,10 @@ class AutoDeleteCryptoSpam(commands.GroupCog, name="automod_delete_crypto"):
         check = []
         for item in message.attachments:
             check.append(NAME_REGEX.search(item.filename) is not None)
+
+        # debug
+        filenames = [item.filename for item in message.attachments]
+        _logger.info(filenames)
 
         if not all(check):
             return
