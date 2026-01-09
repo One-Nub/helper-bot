@@ -10,7 +10,7 @@ from discord.ext import commands
 from resources.constants import ADMIN_ROLES, RED
 from resources.helper_bot import HelperBot
 
-NAME_REGEX = re.compile(r"\d\.(jpg|jpeg|png|webm|gif|mov|mp4|gifv)")
+NAME_REGEX = re.compile(r"(image|\d)\.(jpg|jpeg|png|webm|gif|mov|mp4|gifv)")
 _logger = logging.getLogger(__name__)
 
 
@@ -31,7 +31,7 @@ class AutoDeleteCryptoSpam(commands.GroupCog, name="automod_delete_crypto"):
             return
 
         # They typically post 4 attachments per message.
-        if len(message.attachments) < 3:
+        if len(message.attachments) != 4:
             return
 
         check = []
