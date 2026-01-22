@@ -30,8 +30,14 @@ class AutoDeleteCryptoSpam(commands.GroupCog, name="automod_delete_crypto"):
         ):
             return
 
-        # They typically post 4 attachments per message.
-        if len(message.attachments) != 4:
+        # Log single msg attachments (to use for reference for common formats.)
+        # Some spambots only post 1 image, using this as a baseline.
+        if len(message.attachments) == 1 and NAME_REGEX.search(message.attachments[0].filename) is not None:
+            _logger.info(message.attachments[0].filename)
+            return
+
+        # Filter out if there is less than 3 images.
+        if len(message.attachments) < 3:
             return
 
         check = []
