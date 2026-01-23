@@ -7,7 +7,7 @@ import discord
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from resources.constants import ADMIN_ROLES, RED
+from resources.constants import ADMIN_ROLES, BLOXLINK_GUILD, RED
 from resources.helper_bot import HelperBot
 
 NAME_REGEX = re.compile(r"(image|\d)\.(jpg|jpeg|png|webm|gif|mov|mp4|gifv)")
@@ -27,6 +27,7 @@ class AutoDeleteCryptoSpam(commands.GroupCog, name="automod_delete_crypto"):
             or not message.guild
             or not type(message.author) == discord.Member
             or not message.attachments
+            or not message.guild.id == BLOXLINK_GUILD
         ):
             return
 
