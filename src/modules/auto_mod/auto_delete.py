@@ -10,7 +10,7 @@ from discord.ext import commands
 from resources.constants import ADMIN_ROLES, BLOXLINK_GUILD, RED
 from resources.helper_bot import HelperBot
 
-NAME_REGEX = re.compile(r"(image|\d)\.(jpg|jpeg|png|webm|gif|mov|mp4|gifv)")
+NAME_REGEX = re.compile(r"(image|\d|\d_[a-zA-Z0-9]{7,})\.(jpg|jpeg|png|webm|gif|mov|mp4|gifv)")
 _logger = logging.getLogger(__name__)
 
 
