@@ -82,6 +82,7 @@ class AutoDeleteCryptoSpam(commands.GroupCog, name="automod_delete_crypto"):
         with contextlib.suppress(discord.NotFound):
             await message.delete()
 
+        _logger.info("Removed user %s", message.author.id)
         await message.author.ban(delete_message_days=1, reason="Image spam for crypto - compromised account.")
         await asyncio.sleep(0.5)
         await message.author.unban(
