@@ -69,7 +69,7 @@ async def api_menu(interaction: discord.Interaction, user: discord.Member):
 
 
 async def api_request_handler(user_id: int) -> tuple:
-    url = f"https://api.blox.link/v4/public/discord-to-roblox/{user_id}"
+    url = f"https://api.blox.link/v4/public/guilds/{BLOXLINK_GUILD}/discord-to-roblox/{user_id}"
 
     embed = discord.Embed()
     embed.timestamp = datetime.now()
