@@ -4,7 +4,7 @@ import discord
 import requests
 from discord.ext.commands import Context, check
 
-from resources.checks import is_hr, is_staff_or_trial
+from resources.checks import is_dev, is_hr, is_staff_or_trial
 from resources.constants import BLOXLINK_DEAD, BLOXLINK_GUILD, BLURPLE, RED, TEAM_CENTER_GUILD
 from resources.exceptions import HelperError
 from resources.helper_bot import instance as bot
@@ -18,7 +18,7 @@ async def api(ctx: Context, lookup_id: int = 0):
     if not ctx.guild:
         raise HelperError("This command can only be used in a server!")
 
-    if ctx.guild.id != BLOXLINK_GUILD:
+    if ctx.guild.id != BLOXLINK_GUILD and not await is_dev(ctx):
         check_hr = await is_hr(ctx)
         if not check_hr:
             raise HelperError("This command can only be used in the Bloxlink HQ Server!")
